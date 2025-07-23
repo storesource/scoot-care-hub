@@ -17,18 +17,21 @@ export type Database = {
       chat_sessions: {
         Row: {
           chat_blob: Json | null
+          expires_at: string | null
           id: string
           started_at: string
           user_id: string
         }
         Insert: {
           chat_blob?: Json | null
+          expires_at?: string | null
           id?: string
           started_at?: string
           user_id: string
         }
         Update: {
           chat_blob?: Json | null
+          expires_at?: string | null
           id?: string
           started_at?: string
           user_id?: string
@@ -153,6 +156,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_chat_sessions: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       get_user_role: {
         Args: { user_id: string }
         Returns: string
