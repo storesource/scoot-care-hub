@@ -25,14 +25,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           setCurrentStep('authenticated');
-          // Create or update user profile
-          await upsertUserProfile(session.user);
+          // Defer user profile creation to avoid blocking auth state changes
+          setTimeout(() => {
+            upsertUserProfile(session.user);
+          }, 0);
         } else {
           setCurrentStep('phone');
         }
