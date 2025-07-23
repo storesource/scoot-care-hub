@@ -17,6 +17,7 @@ interface ChatMessage {
   role: 'user' | 'assistant';
   timestamp: string;
   file_url?: string;
+  user_id?: string; // Added to track who sent the message
   [key: string]: any; // Allow additional properties for Supabase Json compatibility
 }
 
@@ -27,9 +28,9 @@ interface SupportChatInterfaceProps {
   onBack: () => void;
 }
 
-const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean; currentUserRole: string }> = ({ message, isReadOnly, currentUserRole }) => {
-  // Determine if this is the current user's message
-  const isCurrentUser = message.role === 'user';
+const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean; currentUserRole: string; currentUserId: string }> = ({ message, isReadOnly, currentUserRole, currentUserId }) => {
+  // Determine if this is the current user's message by checking user_id
+  const isCurrentUser = message.user_id === currentUserId;
   // Determine labels based on current user's role
   const currentUserLabel = "You";
   const otherUserLabel = currentUserRole === 'admin' ? "Customer" : "Support";
@@ -266,7 +267,8 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
         content: inputMessage,
         role: 'user',
         timestamp: new Date().toISOString(),
-        file_url: fileUrl || undefined
+        file_url: fileUrl || undefined,
+        user_id: user.id
       };
 
       const updatedMessages = [...messages, newMessage];
@@ -361,7 +363,7 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
             </div>
           ) : (
             messages.map((message) => (
-              <ChatMessageComponent key={message.id} message={message} isReadOnly={isReadOnly} currentUserRole={currentUserRole} />
+              <ChatMessageComponent key={message.id} message={message} isReadOnly={isReadOnly} currentUserRole={currentUserRole} currentUserId={user?.id || ''} />
             ))
           )}
         </div>

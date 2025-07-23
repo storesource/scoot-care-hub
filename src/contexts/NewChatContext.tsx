@@ -184,28 +184,57 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return bestMatch;
   };
 
+  const fetchLatestOrderStatus = async (): Promise<string> => {
+    try {
+      const { data: orders, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      if (orders && orders.length > 0) {
+        const order = orders[0];
+        const formattedDate = order.expected_delivery_date 
+          ? new Date(order.expected_delivery_date).toLocaleDateString('en-US', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })
+          : 'not yet scheduled';
+        
+        const statusEmoji = {
+          'processing': '⏳',
+          'shipped': '🚚',
+          'delivered': '✅',
+          'cancelled': '❌'
+        }[order.order_status.toLowerCase()] || '📦';
+        
+        return `${statusEmoji} **Order Status Update**\n\n` +
+               `• **Product:** ${order.model_name}\n` +
+               `• **Status:** ${order.order_status.charAt(0).toUpperCase() + order.order_status.slice(1)}\n` +
+               `• **Expected Delivery:** ${formattedDate}\n` +
+               `• **Order Date:** ${new Date(order.created_at).toLocaleDateString()}\n\n` +
+               `${order.order_status.toLowerCase() === 'shipped' ? 'Your order is on its way! 🎉' : 
+                 order.order_status.toLowerCase() === 'delivered' ? 'Your order has been delivered! Enjoy your new scooter! 🛴' :
+                 order.order_status.toLowerCase() === 'processing' ? 'We\'re preparing your order for shipment.' :
+                 'Please contact support if you have any questions about your order.'}`;
+      } else {
+        return "📦 **No Orders Found**\n\nI don't see any orders associated with your account. Would you like to:\n\n• Browse our scooter models\n• Get help placing a new order\n• Contact support for assistance";
+      }
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+      return "⚠️ **Unable to Retrieve Order Information**\n\nI'm having trouble accessing your order details right now. Please try again in a few moments, or contact our support team for immediate assistance.";
+    }
+  };
+
   const handleFunctionType = async (entry: KnowledgebaseEntry): Promise<string> => {
     // Handle function type knowledgebase entries
     if (entry.metadata?.function === 'order_tracking') {
-      try {
-        const { data: orders, error } = await supabase
-          .from('orders')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
-
-        if (orders && orders.length > 0) {
-          const order = orders[0];
-          return `Your latest order for ${order.model_name} is currently ${order.order_status}. ${order.expected_delivery_date ? `Expected delivery: ${order.expected_delivery_date}` : ''}`;
-        } else {
-          return "You don't have any orders on record. Would you like to place an order?";
-        }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
-        return "I'm having trouble accessing your order information right now. Please try again later.";
-      }
+      return await fetchLatestOrderStatus();
     }
 
     return entry.resolution;
