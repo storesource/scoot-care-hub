@@ -14,158 +14,118 @@ export type Database = {
   }
   public: {
     Tables: {
-      chat_knowledgebase: {
+      chat_sessions: {
         Row: {
-          answer: string
-          created_at: string
+          chat_blob: Json | null
           id: string
-          question: string
-          updated_at: string
+          started_at: string
+          user_id: string
         }
         Insert: {
-          answer: string
-          created_at?: string
+          chat_blob?: Json | null
           id?: string
-          question: string
-          updated_at?: string
+          started_at?: string
+          user_id: string
         }
         Update: {
-          answer?: string
-          created_at?: string
+          chat_blob?: Json | null
           id?: string
-          question?: string
-          updated_at?: string
+          started_at?: string
+          user_id?: string
         }
         Relationships: []
       }
-      chat_messages: {
+      knowledgebase: {
         Row: {
-          created_at: string | null
-          escalated: boolean | null
-          file_url: string | null
+          created_at: string
           id: string
-          message: string | null
-          sender: string | null
-          user_id: string | null
+          metadata: Json | null
+          question: string
+          resolution: string
+          type: string
         }
         Insert: {
-          created_at?: string | null
-          escalated?: boolean | null
-          file_url?: string | null
+          created_at?: string
           id?: string
-          message?: string | null
-          sender?: string | null
-          user_id?: string | null
+          metadata?: Json | null
+          question: string
+          resolution: string
+          type: string
         }
         Update: {
-          created_at?: string | null
-          escalated?: boolean | null
-          file_url?: string | null
+          created_at?: string
           id?: string
-          message?: string | null
-          sender?: string | null
-          user_id?: string | null
+          metadata?: Json | null
+          question?: string
+          resolution?: string
+          type?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "chat_messages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      faqs: {
-        Row: {
-          answer: string | null
-          created_at: string | null
-          created_by: string | null
-          id: string
-          question: string | null
-        }
-        Insert: {
-          answer?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          question?: string | null
-        }
-        Update: {
-          answer?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          id?: string
-          question?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "faqs_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       orders: {
         Row: {
-          created_at: string | null
+          created_at: string
           expected_delivery_date: string | null
           id: string
-          model: string | null
-          status: string | null
-          user_id: string | null
+          model_name: string
+          order_status: string
+          user_id: string
         }
         Insert: {
-          created_at?: string | null
+          created_at?: string
           expected_delivery_date?: string | null
           id?: string
-          model?: string | null
-          status?: string | null
-          user_id?: string | null
+          model_name: string
+          order_status: string
+          user_id: string
         }
         Update: {
-          created_at?: string | null
+          created_at?: string
           expected_delivery_date?: string | null
           id?: string
-          model?: string | null
-          status?: string | null
-          user_id?: string | null
+          model_name?: string
+          order_status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_queries: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          session_id: string | null
+          status: string
+          summary: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          session_id?: string | null
+          status?: string
+          summary: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          session_id?: string | null
+          status?: string
+          summary?: string
+          user_id?: string
         }
         Relationships: [
           {
-            foreignKeyName: "orders_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "support_queries_session_id_fkey"
+            columns: ["session_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "chat_sessions"
             referencedColumns: ["id"]
           },
         ]
-      }
-      starter_questions: {
-        Row: {
-          created_at: string
-          id: string
-          order_hint: number | null
-          question: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          order_hint?: number | null
-          question: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          order_hint?: number | null
-          question?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       users: {
         Row: {
