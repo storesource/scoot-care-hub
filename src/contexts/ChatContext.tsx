@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAdmin } from './AdminContext';
 
 export interface ChatMessage {
   id: string;
@@ -37,6 +38,7 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { getBotResponse } = useAdmin();
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
 
@@ -107,7 +109,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Simulate bot response
     const botMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
-      content: generateBotResponse(content),
+      content: getBotResponse(content),
       timestamp: new Date(Date.now() + 1000),
       isBot: true
     };
@@ -177,25 +179,4 @@ export const useChat = () => {
   return context;
 };
 
-// Simple bot response generator
-const generateBotResponse = (userMessage: string): string => {
-  const message = userMessage.toLowerCase();
-  
-  if (message.includes('battery') || message.includes('charge')) {
-    return "Battery issues can often be resolved by checking the charging port for debris and ensuring you're using the original charger. If the battery won't hold a charge, it may need replacement. Would you like me to schedule a battery diagnostic?";
-  }
-  
-  if (message.includes('speed') || message.includes('slow')) {
-    return "Speed issues can be caused by low battery, tire pressure, or software settings. Try checking your riding mode settings and ensure your tires are properly inflated. Is your scooter in eco mode?";
-  }
-  
-  if (message.includes('brake') || message.includes('stop')) {
-    return "Brake issues should be addressed immediately for safety. Check if the brake lever feels loose or if there are any unusual sounds. I recommend scheduling an immediate inspection with our service team.";
-  }
-  
-  if (message.includes('unlock') || message.includes('app')) {
-    return "App connectivity issues can usually be resolved by checking your Bluetooth connection and ensuring the app is updated. Try restarting both your phone and scooter. Are you getting any specific error messages?";
-  }
-  
-  return "I understand your concern. Let me help you with that. Can you provide more details about the specific issue you're experiencing with your scooter?";
-};
+// This function is no longer used - responses now come from the admin-managed Q&A system

@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User } from "lucide-react";
+import { Menu, Search, User, Shield } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -29,6 +30,11 @@ const Header = () => {
               className="pl-10 pr-4 py-2 bg-muted rounded-md border-0 w-80 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
+          <Link to="/admin">
+            <Button variant="ghost" size="icon" title="Admin Panel">
+              <Shield className="h-5 w-5" />
+            </Button>
+          </Link>
           <Button variant="ghost" size="icon">
             <User className="h-5 w-5" />
           </Button>
