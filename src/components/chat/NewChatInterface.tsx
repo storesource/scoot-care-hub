@@ -54,8 +54,20 @@ export const NewChatInterface = () => {
     }
   };
 
-  // Filter knowledgebase for starter questions
-  const starterQuestions = knowledgebase.filter(entry => entry.type === 'qna').slice(0, 5);
+  // Filter knowledgebase for starter questions - show all QnA entries
+  const starterQuestions = knowledgebase.filter(entry => entry.type === 'qna');
+  
+  // Add "Where is my order?" as a quick question
+  const quickQuestions = [
+    ...starterQuestions,
+    {
+      id: 'order-status',
+      question: 'Where is my order?',
+      type: 'function' as const,
+      resolution: '',
+      metadata: { function: 'order_tracking' }
+    }
+  ];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -68,13 +80,13 @@ export const NewChatInterface = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Starter Questions */}
-          {starterQuestions.length > 0 && (
+          {quickQuestions.length > 0 && (
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm font-medium text-blue-700 mb-3">
                 Quick questions to get you started:
               </p>
               <div className="flex flex-wrap gap-2">
-                {starterQuestions.map((question) => (
+                {quickQuestions.map((question) => (
                   <Button
                     key={question.id}
                     variant="outline"

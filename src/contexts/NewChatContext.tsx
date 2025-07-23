@@ -230,18 +230,24 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fileUrl
       };
 
-      // Find knowledgebase match
-      const match = findKnowledgebaseMatch(content);
       let botResponse: string;
-
-      if (match) {
-        if (match.type === 'function') {
-          botResponse = await handleFunctionType(match);
-        } else {
-          botResponse = match.resolution;
-        }
+      
+      // If only file was uploaded (no text message)
+      if (file && !content.trim()) {
+        botResponse = "Thank you for uploading the file for reference. How can I help you with this?";
       } else {
-        botResponse = "I understand your question, but I don't have a specific answer for that. Would you like me to escalate this to our support team?";
+        // Find knowledgebase match
+        const match = findKnowledgebaseMatch(content);
+
+        if (match) {
+          if (match.type === 'function') {
+            botResponse = await handleFunctionType(match);
+          } else {
+            botResponse = match.resolution;
+          }
+        } else {
+          botResponse = "I understand your question, but I don't have a specific answer for that. Would you like me to escalate this to our support team?";
+        }
       }
 
       const botMessage: ChatMessage = {
