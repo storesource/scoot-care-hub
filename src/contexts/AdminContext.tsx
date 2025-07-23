@@ -64,22 +64,6 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     // Simple admin credentials (in production, this would be properly secured)
     if (username === 'admin' && password === 'scootcare2024') {
       setIsAdminAuthenticated(true);
-      
-      // Sign in as admin user in Supabase
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'admin@scootcare.app',
-          password: 'admin123!'
-        });
-        
-        if (error) {
-          console.error('Admin Supabase auth error:', error);
-          // Continue with local auth even if Supabase fails
-        }
-      } catch (error) {
-        console.error('Admin auth error:', error);
-      }
-      
       return true;
     }
     return false;
