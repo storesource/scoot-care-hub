@@ -53,13 +53,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const upsertUserProfile = async (user: User) => {
     try {
-      await supabase
+      console.log('Creating/updating user profile for:', user.id, user.phone);
+      const { data, error } = await supabase
         .from('users')
         .upsert({
           id: user.id,
           phone: user.phone || phoneNumber,
           role: 'customer'
         }, { onConflict: 'id' });
+      
+      if (error) {
+        console.error('Error upserting user profile:', error);
+      } else {
+        console.log('User profile created/updated successfully:', data);
+      }
     } catch (error) {
       console.error('Error upserting user profile:', error);
     }
