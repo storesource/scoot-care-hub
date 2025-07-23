@@ -67,8 +67,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const sendOTP = async (phone: string) => {
     try {
+      // Ensure phone number has proper international format for Supabase Auth
+      const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+      
       const { error } = await supabase.auth.signInWithOtp({
-        phone: phone,
+        phone: formattedPhone,
         options: {
           channel: 'sms'
         }
@@ -78,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: error.message };
       }
       
-      setPhoneNumber(phone);
+      setPhoneNumber(formattedPhone);
       setCurrentStep('otp');
       return {};
     } catch (error) {
