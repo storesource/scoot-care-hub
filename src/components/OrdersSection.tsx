@@ -1,14 +1,36 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useOrders } from '@/contexts/OrderContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Package, Truck, MapPin, Calendar, DollarSign } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const OrdersSection = () => {
-  const { getOrdersByPhone } = useOrders();
-  const { phoneNumber } = useAuth();
-  const customerOrders = getOrdersByPhone(phoneNumber);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserOrders();
+    }
+  }, [user]);
+
+  const fetchUserOrders = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -32,7 +54,7 @@ export const OrdersSection = () => {
     }
   };
 
-  if (customerOrders.length === 0) {
+  if (orders.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -57,23 +79,23 @@ export const OrdersSection = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Package className="w-5 h-5" />
-          Your Orders ({customerOrders.length})
+          Your Orders ({orders.length})
         </CardTitle>
         <CardDescription>Track your scooter deliveries and get status updates</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {customerOrders.map((order) => (
+          {orders.map((order: any) => (
             <Card key={order.id} className="border-l-4 border-l-primary">
               <CardContent className="p-4">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="font-semibold text-lg">{order.model}</h3>
-                    <p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p>
+                    <h3 className="font-semibold text-lg">{order.model_name}</h3>
+                    <p className="text-sm text-muted-foreground">Order #{order.id.slice(0, 8)}</p>
                   </div>
-                  <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
-                    {getStatusIcon(order.status)}
-                    {order.status.replace('-', ' ')}
+                  <Badge className={`${getStatusColor(order.order_status)} flex items-center gap-1`}>
+                    {getStatusIcon(order.order_status)}
+                    {order.order_status.replace('-', ' ')}
                   </Badge>
                 </div>
                 
@@ -82,52 +104,35 @@ export const OrdersSection = () => {
                     <div className="flex items-center gap-2">
                       <Package className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Model:</span>
-                      <span>{order.model} - {order.color}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Price:</span>
-                      <span>${order.price}</span>
+                      <span>{order.model_name}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-muted-foreground" />
                       <span className="text-muted-foreground">Order Date:</span>
-                      <span>{order.orderDate.toLocaleDateString()}</span>
+                      <span>{new Date(order.created_at).toLocaleDateString()}</span>
                     </div>
                   </div>
                   
                   <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Truck className="w-4 h-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">Est. Delivery:</span>
-                      <span>{order.estimatedDelivery.toLocaleDateString()}</span>
-                    </div>
-                    {order.trackingNumber && (
+                    {order.expected_delivery_date && (
                       <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Tracking:</span>
-                        <span className="font-mono text-xs">{order.trackingNumber}</span>
+                        <Truck className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-muted-foreground">Est. Delivery:</span>
+                        <span>{new Date(order.expected_delivery_date).toLocaleDateString()}</span>
                       </div>
                     )}
-                    <div className="flex items-start gap-2">
-                      <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                      <div>
-                        <span className="text-muted-foreground">Delivery to:</span>
-                        <p className="text-xs">{order.deliveryAddress}</p>
-                      </div>
-                    </div>
                   </div>
                 </div>
                 
-                {order.status === 'processing' && (
+                {order.order_status === 'processing' && (
                   <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm">
                     <p className="text-yellow-800">Your order is being prepared for shipment. You'll receive tracking information once it ships.</p>
                   </div>
                 )}
                 
-                {order.status === 'in-transit' && (
+                {order.order_status === 'shipped' && (
                   <div className="mt-3 p-2 bg-blue-50 border border-blue-200 rounded text-sm">
-                    <p className="text-blue-800">Your scooter is on the way! Ask me for updates using your order number in the chat.</p>
+                    <p className="text-blue-800">Your scooter is on the way! Ask me for updates in the chat.</p>
                   </div>
                 )}
               </CardContent>

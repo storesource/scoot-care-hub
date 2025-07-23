@@ -320,10 +320,20 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const escalateToSupport = async (summary: string, fileUrl?: string) => {
-    if (!user || !currentSession) return;
+    if (!user || !currentSession) {
+      console.error('Missing user or session for escalation:', { user: !!user, session: !!currentSession });
+      return;
+    }
 
     try {
-      const { error } = await supabase
+      console.log('Escalating to support with:', { 
+        user_id: user.id, 
+        session_id: currentSession.id, 
+        summary, 
+        file_url: fileUrl 
+      });
+
+      const { data, error } = await supabase
         .from('support_queries')
         .insert({
           user_id: user.id,
@@ -331,9 +341,16 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           summary,
           file_url: fileUrl,
           status: 'open'
-        });
+        })
+        .select()
+        .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase error creating support query:', error);
+        throw error;
+      }
+
+      console.log('Support query created successfully:', data);
 
       toast({
         title: "Escalated to Support",

@@ -1,10 +1,59 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, Package, FileText, Sparkles, HeadphonesIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const CustomerDashboard = () => {
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
+  const [supportQueries, setSupportQueries] = useState([]);
+
+  useEffect(() => {
+    if (user) {
+      fetchUserOrders();
+      fetchUserSupportQueries();
+    }
+  }, [user]);
+
+  const fetchUserOrders = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error fetching orders:', error);
+    }
+  };
+
+  const fetchUserSupportQueries = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('support_queries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      setSupportQueries(data || []);
+    } catch (error) {
+      console.error('Error fetching support queries:', error);
+    }
+  };
+
   const quickActions = [
     {
       icon: MessageCircle,
@@ -121,11 +170,36 @@ export const CustomerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No recent orders</p>
-                <p className="text-sm">Your order history will appear here</p>
-              </div>
+              {orders.length > 0 ? (
+                <div className="space-y-3">
+                  {orders.map((order: any) => (
+                    <div key={order.id} className="p-3 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{order.model_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className="text-xs capitalize px-2 py-1 bg-primary/10 text-primary rounded">
+                          {order.order_status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link to="/orders" className="block">
+                    <Button variant="outline" size="sm" className="w-full">
+                      View All Orders
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No recent orders</p>
+                  <p className="text-sm">Your order history will appear here</p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -137,11 +211,36 @@ export const CustomerDashboard = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-8 text-muted-foreground">
-                <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                <p>No active support tickets</p>
-                <p className="text-sm">Start a chat to get help</p>
-              </div>
+              {supportQueries.length > 0 ? (
+                <div className="space-y-3">
+                  {supportQueries.map((query: any) => (
+                    <div key={query.id} className="p-3 bg-muted rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium text-sm">{query.summary}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(query.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <span className="text-xs capitalize px-2 py-1 bg-orange-100 text-orange-800 rounded">
+                          {query.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                  <Link to="/support" className="block">
+                    <Button variant="outline" size="sm" className="w-full">
+                      View All Tickets
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <MessageCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>No active support tickets</p>
+                  <p className="text-sm">Start a chat to get help</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
