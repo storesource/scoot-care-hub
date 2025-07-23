@@ -56,12 +56,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const upsertUserProfile = async (user: User) => {
     try {
       console.log('Creating/updating user profile for:', user.id, user.phone);
+      
+      // Check if user already exists to preserve their role
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
       const { data, error } = await supabase
         .from('users')
         .upsert({
           id: user.id,
           phone: user.phone || phoneNumber,
-          role: 'customer'
+          // Only set role to 'customer' for new users, preserve existing role
+          ...(existingUser ? {} : { role: 'customer' })
         }, { onConflict: 'id' });
       
       if (error) {

@@ -188,7 +188,17 @@ export const CustomerDashboard = () => {
   return (
     <div className="min-h-screen bg-background p-4" style={{ accentColor: 'hsl(173, 58%, 39%)' }}>
       <div className="max-w-4xl mx-auto space-y-6">
-        <h1 className="text-2xl font-bold text-foreground mb-6">Customer Portal</h1>
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <div className="w-10 h-10 bg-gradient-electric rounded-full flex items-center justify-center">
+              <span className="text-white font-bold">S</span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">ScootCare</h1>
+              <p className="text-sm text-muted-foreground -mt-1">Support Portal</p>
+            </div>
+          </div>
+        </div>
         
         {/* Chat Section */}
         <Card className="p-6">
