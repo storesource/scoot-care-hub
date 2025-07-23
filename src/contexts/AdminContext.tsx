@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface QAPair {
   id: string;
@@ -15,7 +16,7 @@ interface AdminContextType {
   addQAPair: (qa: Omit<QAPair, 'id' | 'createdAt' | 'updatedAt'>) => void;
   updateQAPair: (id: string, qa: Partial<QAPair>) => void;
   deleteQAPair: (id: string) => void;
-  loginAdmin: (username: string, password: string) => boolean;
+  loginAdmin: (username: string, password: string) => Promise<boolean>;
   logoutAdmin: () => void;
   getBotResponse: (userMessage: string) => string;
 }
@@ -59,10 +60,26 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   ]);
 
-  const loginAdmin = (username: string, password: string): boolean => {
+  const loginAdmin = async (username: string, password: string): Promise<boolean> => {
     // Simple admin credentials (in production, this would be properly secured)
     if (username === 'admin' && password === 'scootcare2024') {
       setIsAdminAuthenticated(true);
+      
+      // Sign in as admin user in Supabase
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'admin@scootcare.app',
+          password: 'admin123!'
+        });
+        
+        if (error) {
+          console.error('Admin Supabase auth error:', error);
+          // Continue with local auth even if Supabase fails
+        }
+      } catch (error) {
+        console.error('Admin auth error:', error);
+      }
+      
       return true;
     }
     return false;

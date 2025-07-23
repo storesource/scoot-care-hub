@@ -12,11 +12,11 @@ export const AdminLogin = () => {
   const [error, setError] = useState('');
   const { loginAdmin } = useAdmin();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    const success = loginAdmin(username, password);
+    const success = await loginAdmin(username, password);
     if (!success) {
       setError('Invalid credentials. Please try again.');
     }

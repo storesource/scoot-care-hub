@@ -28,6 +28,10 @@ interface SupportQuery {
   file_url?: string;
   status: string;
   created_at: string;
+  users?: {
+    phone: string;
+    role: string;
+  };
 }
 
 export const AdminDashboard = () => {
@@ -59,45 +63,36 @@ export const AdminDashboard = () => {
   const fetchSupportQueries = async () => {
     console.log('Fetching support queries...');
     
-    // First check user role
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('No authenticated user found');
-      toast({ title: "Error", description: "Authentication required", variant: "destructive" });
-      return;
-    }
-
-    // Check if user is admin
-    const { data: roleData, error: roleError } = await supabase
-      .rpc('get_user_role', { user_id: user.id });
-    
-    if (roleError) {
-      console.error('Error checking user role:', roleError);
-      toast({ title: "Error", description: "Failed to verify admin permissions", variant: "destructive" });
-      return;
-    }
-
-    console.log('User role:', roleData);
-    if (roleData !== 'admin') {
-      console.error('User is not admin, role:', roleData);
-      toast({ title: "Error", description: "Admin access required", variant: "destructive" });
-      return;
-    }
-
-    const { data, error } = await supabase
+    // First get support queries
+    const { data: queries, error: queriesError } = await supabase
       .from('support_queries')
       .select('*')
       .order('created_at', { ascending: false });
     
-    console.log('Support queries fetch result:', { data, error });
-    
-    if (error) {
-      console.error('Support queries fetch error:', error);
-      toast({ title: "Error", description: `Failed to fetch support queries: ${error.message}`, variant: "destructive" });
-    } else {
-      console.log('Successfully fetched support queries:', data?.length || 0, 'items');
-      setSupportQueries(data || []);
+    if (queriesError) {
+      console.error('Support queries fetch error:', queriesError);
+      toast({ title: "Error", description: `Failed to fetch support queries: ${queriesError.message}`, variant: "destructive" });
+      return;
     }
+
+    // Then get user data for each query
+    const queriesWithUsers = await Promise.all(
+      (queries || []).map(async (query) => {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('phone, role')
+          .eq('id', query.user_id)
+          .single();
+        
+        return {
+          ...query,
+          users: userData
+        };
+      })
+    );
+    
+    console.log('Successfully fetched support queries:', queriesWithUsers.length, 'items');
+    setSupportQueries(queriesWithUsers);
   };
 
   const addKnowledgebaseEntry = async () => {
@@ -266,19 +261,22 @@ export const AdminDashboard = () => {
                       }
                     }}
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <AlertCircle className="h-4 w-4 text-orange-500" />
-                        <Badge variant={query.status === 'open' ? 'destructive' : 'default'}>
-                          {query.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(query.created_at).toLocaleDateString()}
-                        </span>
-                        {query.session_id && (
-                          <MessageSquare className="h-4 w-4 text-primary" />
-                        )}
-                      </div>
+                     <div className="flex items-start justify-between mb-2">
+                       <div className="flex items-center gap-2">
+                         <AlertCircle className="h-4 w-4 text-orange-500" />
+                         <Badge variant={query.status === 'open' ? 'destructive' : 'default'}>
+                           {query.status}
+                         </Badge>
+                         <span className="text-xs text-muted-foreground">
+                           {new Date(query.created_at).toLocaleDateString()}
+                         </span>
+                         <span className="text-xs text-muted-foreground">
+                           User: {query.users?.phone || 'Unknown'}
+                         </span>
+                         {query.session_id && (
+                           <MessageSquare className="h-4 w-4 text-primary" />
+                         )}
+                       </div>
                       <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                         {query.session_id && (
                           <Button

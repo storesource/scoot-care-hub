@@ -31,7 +31,9 @@ const Support = () => {
   const { toast } = useToast();
 
   // Prevent admin from creating support tickets
-  if (user?.user_metadata?.role === 'admin') {
+  const isAdmin = user?.user_metadata?.role === 'admin';
+  
+  if (isAdmin) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
