@@ -272,7 +272,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const handleFunctionType = async (entry: KnowledgebaseEntry): Promise<string> => {
     // Handle function type knowledgebase entries
-    if (entry.metadata?.function === 'order_tracking') {
+    if (entry.resolution === 'fetchLatestOrderStatus') {
       return await fetchLatestOrderStatus();
     }
 
