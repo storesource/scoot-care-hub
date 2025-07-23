@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, MessageSquare, FileText, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { SupportChatInterface } from "@/components/chat/SupportChatInterface";
 
 interface KnowledgebaseEntry {
   id: string;
@@ -34,6 +35,7 @@ export const AdminDashboard = () => {
   const [supportQueries, setSupportQueries] = useState<SupportQuery[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [newResolution, setNewResolution] = useState("");
+  const [selectedTicket, setSelectedTicket] = useState<SupportQuery | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -148,6 +150,20 @@ export const AdminDashboard = () => {
     }
   };
 
+  // Show chat interface if a ticket is selected
+  if (selectedTicket && selectedTicket.session_id) {
+    return (
+      <div className="min-h-screen bg-background">
+        <SupportChatInterface 
+          sessionId={selectedTicket.session_id}
+          ticketStatus={selectedTicket.status}
+          ticketSummary={selectedTicket.summary}
+          onBack={() => setSelectedTicket(null)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -239,7 +255,17 @@ export const AdminDashboard = () => {
               
               <div className="space-y-4">
                 {supportQueries.map((query) => (
-                  <div key={query.id} className="p-4 bg-secondary rounded-lg">
+                  <div 
+                    key={query.id} 
+                    className={`p-4 bg-secondary rounded-lg transition-colors ${
+                      query.session_id ? 'cursor-pointer hover:bg-secondary/80' : ''
+                    }`}
+                    onClick={() => {
+                      if (query.session_id) {
+                        setSelectedTicket(query);
+                      }
+                    }}
+                  >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <AlertCircle className="h-4 w-4 text-orange-500" />
@@ -249,8 +275,22 @@ export const AdminDashboard = () => {
                         <span className="text-xs text-muted-foreground">
                           {new Date(query.created_at).toLocaleDateString()}
                         </span>
+                        {query.session_id && (
+                          <MessageSquare className="h-4 w-4 text-primary" />
+                        )}
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                        {query.session_id && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setSelectedTicket(query)}
+                            className="text-primary border-primary hover:bg-primary/10"
+                          >
+                            <MessageSquare className="h-3 w-3 mr-1" />
+                            Chat
+                          </Button>
+                        )}
                         {query.status === 'open' && (
                           <Button
                             size="sm"
@@ -278,6 +318,7 @@ export const AdminDashboard = () => {
                         target="_blank" 
                         rel="noopener noreferrer"
                         className="text-xs text-blue-600 hover:underline"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         View attachment
                       </a>
