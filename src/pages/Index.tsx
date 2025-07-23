@@ -60,9 +60,19 @@ const Index = () => {
       {/* Header with logout */}
       <header className="border-b bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl font-bold">
-            {userRole === 'admin' ? 'Admin Portal' : 'ScootCare'}
-          </h1>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-gradient-electric rounded-full flex items-center justify-center">
+                <span className="text-white font-bold text-sm">S</span>
+              </div>
+              <div>
+                <h1 className="font-bold text-lg text-foreground">ScootCare</h1>
+                {userRole === 'admin' && (
+                  <p className="text-xs text-muted-foreground -mt-1">Admin Portal</p>
+                )}
+              </div>
+            </div>
+          </div>
           <Button
             variant="outline"
             onClick={handleLogout}

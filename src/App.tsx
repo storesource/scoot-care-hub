@@ -9,7 +9,8 @@ import { MobileLogin } from "@/components/auth/MobileLogin";
 import { OTPVerification } from "@/components/auth/OTPVerification";
 import Index from "./pages/Index";
 import Orders from "./pages/Orders";
-// Admin page removed
+import Support from "./pages/Support";
+import Chat from "./pages/Chat";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +30,8 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/orders" element={<Orders />} />
-        {/* <Route path="/admin/faqs" element={<AdminFAQ />} /> */}
+        <Route path="/support" element={<Support />} />
+        <Route path="/chat" element={<Chat />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>

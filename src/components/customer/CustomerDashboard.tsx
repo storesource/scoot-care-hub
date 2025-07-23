@@ -1,57 +1,33 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Package, FileText, Sparkles } from 'lucide-react';
-import { ChatProvider } from '@/contexts/NewChatContext';
-import { NewChatInterface } from '@/components/chat/NewChatInterface';
+import { MessageCircle, Package, FileText, Sparkles, HeadphonesIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const CustomerDashboard = () => {
-  const [showChat, setShowChat] = useState(false);
-
   const quickActions = [
     {
       icon: MessageCircle,
       title: "Ask a Question",
       description: "Get instant answers to your questions",
       color: "bg-blue-500",
-      action: () => setShowChat(true)
+      href: "/chat"
     },
     {
       icon: Package,
       title: "Track Order",
       description: "Check your order status and delivery",
       color: "bg-green-500",
-      action: () => setShowChat(true)
+      href: "/orders"
     },
     {
-      icon: FileText,
+      icon: HeadphonesIcon,
       title: "Get Support",
       description: "Contact our support team",
       color: "bg-purple-500",
-      action: () => setShowChat(true)
+      href: "/support"
     }
   ];
-
-  if (showChat) {
-    return (
-      <ChatProvider>
-        <div className="min-h-screen bg-background">
-          <div className="max-w-4xl mx-auto p-4">
-            <div className="mb-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setShowChat(false)}
-                className="mb-4"
-              >
-                ← Back to Dashboard
-              </Button>
-            </div>
-            <NewChatInterface />
-          </div>
-        </div>
-      </ChatProvider>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
@@ -76,10 +52,9 @@ export const CustomerDashboard = () => {
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
-              <div key={action.title}>
+              <Link key={action.title} to={action.href}>
                 <Card 
                   className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 bg-white/70 backdrop-blur-sm"
-                  onClick={action.action}
                 >
                   <CardHeader className="text-center pb-2">
                     <div className={`w-12 h-12 ${action.color} rounded-full flex items-center justify-center mx-auto mb-2`}>
@@ -93,7 +68,7 @@ export const CustomerDashboard = () => {
                     </CardDescription>
                   </CardContent>
                 </Card>
-              </div>
+              </Link>
             );
           })}
         </div>
@@ -124,12 +99,13 @@ export const CustomerDashboard = () => {
                     <li>• Product information and recommendations</li>
                   </ul>
                 </div>
-                <Button 
-                  onClick={() => setShowChat(true)}
-                  className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-6 py-2 whitespace-nowrap"
-                >
-                  Start Chatting
-                </Button>
+                <Link to="/chat">
+                  <Button 
+                    className="bg-white text-blue-600 hover:bg-blue-50 font-medium px-6 py-2 whitespace-nowrap"
+                  >
+                    Start Chatting
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
