@@ -186,39 +186,53 @@ export const CustomerDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4" style={{ accentColor: 'hsl(173, 58%, 39%)' }}>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30 p-4">
       <div className="max-w-4xl mx-auto space-y-6">
-        <div className="text-center mb-6">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-gradient-electric rounded-full flex items-center justify-center">
-              <span className="text-white font-bold">S</span>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-foreground">ScootCare</h1>
-              <p className="text-sm text-muted-foreground -mt-1">Support Portal</p>
+        {/* Hero Header */}
+        <div className="text-center mb-8 relative">
+          <div className="absolute inset-0 bg-gradient-electric opacity-5 rounded-2xl"></div>
+          <div className="relative p-6">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="w-12 h-12 bg-gradient-electric rounded-xl flex items-center justify-center shadow-lg animate-pulse-glow">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold bg-gradient-electric bg-clip-text text-transparent">
+                  ScootCare
+                </h1>
+                <p className="text-sm text-muted-foreground animate-float">
+                  How can we help you today?
+                </p>
+              </div>
             </div>
           </div>
         </div>
         
         {/* Chat Section */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 text-teal-600 flex items-center gap-2">
-            <MessageCircle className="h-5 w-5" />
-            Chat Support
+        <Card className="p-6 shadow-xl border-0 bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+          <h2 className="text-xl font-semibold mb-6 bg-gradient-to-r from-teal-600 to-teal-500 bg-clip-text text-transparent flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-white" />
+            </div>
+            Live Chat Support
           </h2>
           
           {/* Starter Questions */}
           {starterQuestions.length > 0 && (
-            <div className="mb-6">
-              <p className="text-sm text-muted-foreground mb-3">Quick questions:</p>
+            <div className="mb-6 p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100">
+              <p className="text-sm font-medium text-teal-700 mb-3 flex items-center gap-2">
+                <span className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></span>
+                Quick questions to get you started:
+              </p>
               <div className="flex flex-wrap gap-2">
-                {starterQuestions.map((sq) => (
+                {starterQuestions.map((sq, index) => (
                   <Button
                     key={sq.id}
                     variant="outline"
                     size="sm"
                     onClick={() => handleStarterQuestion(sq.question)}
-                    className="text-xs border-teal-200 hover:bg-teal-50"
+                    className="text-xs border-teal-200 hover:bg-teal-100 hover:border-teal-300 transition-all duration-200 hover:scale-105 hover:shadow-md"
+                    style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {sq.question}
                   </Button>
@@ -228,32 +242,46 @@ export const CustomerDashboard = () => {
           )}
           
           {/* Chat Messages */}
-          <div className="h-80 overflow-y-auto mb-4 space-y-3 p-3 bg-secondary/20 rounded-lg">
-            {chatMessages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                  msg.sender === 'user' 
-                    ? 'bg-teal-600 text-white' 
-                    : 'bg-white border shadow-sm'
-                }`}>
-                  <p className="text-sm">{msg.message}</p>
-                  {msg.sender === 'bot' && !msg.escalated && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => escalateMessage(msg.id)}
-                      className="mt-2 text-xs p-1 h-auto text-orange-600 hover:text-orange-800"
-                    >
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Not Helpful? Submit to Support
-                    </Button>
-                  )}
-                  {msg.escalated && (
-                    <Badge variant="secondary" className="mt-1 text-xs">Escalated</Badge>
-                  )}
+          <div className="h-80 overflow-y-auto mb-4 space-y-3 p-4 border border-gray-100 rounded-xl bg-gradient-to-b from-gray-50/50 to-white/50">
+            {chatMessages.length === 0 ? (
+              <div className="flex items-center justify-center h-full text-center">
+                <div className="space-y-3">
+                  <div className="w-16 h-16 bg-gradient-to-r from-teal-100 to-emerald-100 rounded-full flex items-center justify-center mx-auto">
+                    <MessageCircle className="h-8 w-8 text-teal-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Start a conversation</p>
+                    <p className="text-xs text-gray-400 mt-1">Ask a question or try one of the quick options above</p>
+                  </div>
                 </div>
               </div>
-            ))}
+            ) : (
+              chatMessages.map((msg) => (
+                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} animate-in slide-in-from-bottom duration-300`}>
+                  <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-xl shadow-sm ${
+                    msg.sender === 'user' 
+                      ? 'bg-gradient-to-r from-teal-500 to-teal-600 text-white' 
+                      : 'bg-white border border-gray-200 shadow-md'
+                  }`}>
+                    <p className="text-sm">{msg.message}</p>
+                    {msg.sender === 'bot' && !msg.escalated && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => escalateMessage(msg.id)}
+                        className="mt-2 text-xs p-1 h-auto text-orange-600 hover:text-orange-800 hover:bg-orange-50"
+                      >
+                        <AlertTriangle className="h-3 w-3 mr-1" />
+                        Not Helpful? Submit to Support
+                      </Button>
+                    )}
+                    {msg.escalated && (
+                      <Badge variant="secondary" className="mt-1 text-xs bg-orange-100 text-orange-700">Escalated</Badge>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
           
           {/* Chat Input */}
@@ -269,22 +297,32 @@ export const CustomerDashboard = () => {
             <div className="flex flex-col gap-2">
               <Button
                 onClick={() => sendMessage(currentMessage)}
-                disabled={isLoading || !currentMessage.trim()}
-                className="bg-teal-600 hover:bg-teal-700"
+                disabled={!currentMessage.trim() || isLoading}
+                className="bg-gradient-to-r from-teal-500 to-teal-600 hover:from-teal-600 hover:to-teal-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               >
-                <Send className="h-4 w-4" />
+                {isLoading ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
-              <Button variant="outline" size="sm">
-                <Upload className="h-4 w-4" />
+              <Button
+                variant="outline"
+                onClick={() => document.getElementById('file-upload')?.click()}
+                className="border-teal-200 hover:bg-teal-50 hover:border-teal-300"
+              >
+                <Upload className="h-4 w-4 text-teal-600" />
               </Button>
             </div>
           </div>
         </Card>
-
+        
         {/* Orders Section */}
-        <Card className="p-6">
-          <h2 className="text-xl font-semibold mb-4 text-teal-600 flex items-center gap-2">
-            <Package className="h-5 w-5" />
+        <Card className="p-6 shadow-xl border-0 bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-300">
+          <h2 className="text-xl font-semibold mb-4 bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent flex items-center gap-2">
+            <div className="w-8 h-8 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <Package className="h-4 w-4 text-white" />
+            </div>
             My Orders
           </h2>
           
