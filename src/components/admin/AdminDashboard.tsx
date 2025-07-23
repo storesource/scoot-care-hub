@@ -34,7 +34,7 @@ export const AdminDashboard = () => {
   const [supportQueries, setSupportQueries] = useState<SupportQuery[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [newResolution, setNewResolution] = useState("");
-  const [newType, setNewType] = useState<'qna' | 'function'>('qna');
+  const [newType] = useState<'qna'>('qna');
   const [newMetadata, setNewMetadata] = useState("");
   const { toast } = useToast();
 
