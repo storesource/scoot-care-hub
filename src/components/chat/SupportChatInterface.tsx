@@ -136,14 +136,19 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
 
   const fetchMessages = async () => {
     try {
+      console.log('Fetching messages for session:', sessionId);
       const { data, error } = await supabase
         .from('chat_sessions')
         .select('chat_blob')
         .eq('id', sessionId)
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching chat session:', error);
+        throw error;
+      }
       
+      console.log('Chat session data:', data);
       setMessages((data?.chat_blob as ChatMessage[]) || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
