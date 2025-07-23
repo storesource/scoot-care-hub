@@ -22,7 +22,7 @@ interface KnowledgebaseEntry {
 interface SupportQuery {
   id: string;
   user_id: string;
-  session_id: string;
+  session_id: string | null;
   summary: string;
   file_url?: string;
   status: string;
@@ -55,14 +55,45 @@ export const AdminDashboard = () => {
   };
 
   const fetchSupportQueries = async () => {
+    console.log('Fetching support queries...');
+    
+    // First check user role
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('No authenticated user found');
+      toast({ title: "Error", description: "Authentication required", variant: "destructive" });
+      return;
+    }
+
+    // Check if user is admin
+    const { data: roleData, error: roleError } = await supabase
+      .rpc('get_user_role', { user_id: user.id });
+    
+    if (roleError) {
+      console.error('Error checking user role:', roleError);
+      toast({ title: "Error", description: "Failed to verify admin permissions", variant: "destructive" });
+      return;
+    }
+
+    console.log('User role:', roleData);
+    if (roleData !== 'admin') {
+      console.error('User is not admin, role:', roleData);
+      toast({ title: "Error", description: "Admin access required", variant: "destructive" });
+      return;
+    }
+
     const { data, error } = await supabase
       .from('support_queries')
       .select('*')
       .order('created_at', { ascending: false });
     
+    console.log('Support queries fetch result:', { data, error });
+    
     if (error) {
-      toast({ title: "Error", description: "Failed to fetch support queries", variant: "destructive" });
+      console.error('Support queries fetch error:', error);
+      toast({ title: "Error", description: `Failed to fetch support queries: ${error.message}`, variant: "destructive" });
     } else {
+      console.log('Successfully fetched support queries:', data?.length || 0, 'items');
       setSupportQueries(data || []);
     }
   };
