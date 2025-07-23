@@ -61,7 +61,7 @@ const Index = () => {
       <header className="border-b bg-white shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-xl font-bold">
-            {userRole === 'admin' ? 'Admin Portal' : 'Customer Portal'}
+            {userRole === 'admin' ? 'Admin Portal' : 'ScootCare'}
           </h1>
           <Button
             variant="outline"
