@@ -1,0 +1,3 @@
+-- Insert admin user (will be inserted with phone 8806471526 when they authenticate)
+-- The admin user will be created when someone logs in with phone 8806471526
+-- No need for manual insertion as the auth system handles user creation
