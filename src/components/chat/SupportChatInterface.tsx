@@ -27,33 +27,53 @@ interface SupportChatInterfaceProps {
   onBack: () => void;
 }
 
-const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean }> = ({ message, isReadOnly }) => {
-  const isBot = message.role === 'assistant';
+const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean; currentUserRole: string }> = ({ message, isReadOnly, currentUserRole }) => {
+  // Determine if this is the current user's message
+  const isCurrentUser = message.role === 'user';
+  // Determine labels based on current user's role
+  const currentUserLabel = "You";
+  const otherUserLabel = currentUserRole === 'admin' ? "Customer" : "Support";
+  
+  const senderLabel = isCurrentUser ? currentUserLabel : otherUserLabel;
 
   return (
-    <div className={`flex gap-3 ${isBot ? 'justify-start' : 'justify-end'}`}>
-      {isBot && (
+    <div className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+      {!isCurrentUser && (
         <Avatar className="w-8 h-8 bg-gradient-electric">
           <AvatarFallback className="text-white">
-            <Bot className="w-4 h-4" />
+            {currentUserRole === 'admin' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
           </AvatarFallback>
         </Avatar>
       )}
       
-      <div className={`max-w-[80%] ${isBot ? 'order-2' : 'order-1'}`}>
+      <div className={`max-w-[80%] ${isCurrentUser ? 'order-1' : 'order-2'}`}>
+        <div className="mb-1">
+          <span className="text-xs text-muted-foreground font-medium">{senderLabel}</span>
+        </div>
         <Card className={`p-3 ${
-          isBot 
-            ? 'bg-card border-border' 
-            : 'bg-gradient-electric text-white border-0'
+          isCurrentUser 
+            ? 'bg-gradient-electric text-white border-0' 
+            : 'bg-card border-border'
         }`}>
-          <p className="text-sm">{message.content}</p>
+          {message.content && <p className="text-sm">{message.content}</p>}
           
           {message.file_url && (
-            <div className="mt-2 flex items-center gap-2 text-xs opacity-80">
+            <div className={`${message.content ? 'mt-2' : ''} flex items-center gap-2 text-xs`}>
               <FileText className="w-3 h-3" />
-              <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="underline">
-                View attachment
-              </a>
+              <div className="flex flex-col gap-1">
+                <a 
+                  href={message.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="underline hover:no-underline"
+                  download
+                >
+                  Download file
+                </a>
+                <span className="opacity-70 text-xs">
+                  Uploaded by {senderLabel}
+                </span>
+              </div>
             </div>
           )}
         </Card>
@@ -62,7 +82,7 @@ const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean
         </p>
       </div>
 
-      {!isBot && (
+      {isCurrentUser && (
         <Avatar className="w-8 h-8 bg-gradient-electric">
           <AvatarFallback className="text-white">
             <User className="w-4 h-4" />
@@ -84,6 +104,7 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('customer');
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -92,8 +113,31 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
-    onDrop: (acceptedFiles) => {
+    maxSize: 1 * 1024 * 1024, // 1MB
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg']
+    },
+    onDrop: (acceptedFiles, rejectedFiles) => {
+      if (rejectedFiles.length > 0) {
+        const rejection = rejectedFiles[0];
+        if (rejection.errors.some(e => e.code === 'file-too-large')) {
+          toast({
+            title: "File too large",
+            description: "Please select a file smaller than 1MB",
+            variant: "destructive"
+          });
+        } else if (rejection.errors.some(e => e.code === 'file-invalid-type')) {
+          toast({
+            title: "Invalid file type",
+            description: "Please select a PDF, PNG, or JPG file",
+            variant: "destructive"
+          });
+        }
+        return;
+      }
+      
       if (acceptedFiles.length > 0 && !isReadOnly) {
         setAttachedFile(acceptedFiles[0]);
       }
@@ -103,6 +147,7 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
 
   useEffect(() => {
     fetchMessages();
+    fetchUserRole();
     
     // Set up real-time subscription for new messages
     const channel = supabase
@@ -127,6 +172,27 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
       supabase.removeChannel(channel);
     };
   }, [sessionId]);
+
+  const fetchUserRole = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+        return;
+      }
+
+      setCurrentUserRole(data?.role || 'customer');
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -295,7 +361,7 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
             </div>
           ) : (
             messages.map((message) => (
-              <ChatMessageComponent key={message.id} message={message} isReadOnly={isReadOnly} />
+              <ChatMessageComponent key={message.id} message={message} isReadOnly={isReadOnly} currentUserRole={currentUserRole} />
             ))
           )}
         </div>
