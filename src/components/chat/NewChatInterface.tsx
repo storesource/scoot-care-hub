@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Upload, MessageCircle, AlertTriangle, Bot, User } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Send, Upload, MessageCircle, AlertTriangle, Bot, User, FileText } from 'lucide-react';
 import { useChat } from '@/contexts/NewChatContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -116,35 +117,66 @@ export const NewChatInterface = () => {
                 </div>
               </div>
             ) : (
-              currentSession.chat_blob.map((msg) => (
-                <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm ${
-                    msg.sender === 'user' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-white border border-gray-200'
-                  }`}>
-                    <div className="flex items-start gap-2 mb-2">
-                      {msg.sender === 'bot' ? (
-                        <Bot className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                      ) : (
-                        <User className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
-                      )}
-                      <div className="flex-1">
-                        <p className="text-sm">{msg.content}</p>
-                        {msg.fileUrl && (
-                          <a 
-                            href={msg.fileUrl} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-xs underline mt-1 block"
-                          >
-                            View attachment
-                          </a>
-                        )}
-                      </div>
-                    </div>
+              currentSession.chat_blob.map((msg) => {
+                const isCurrentUser = msg.user_id === currentSession.user_id;
+                const isBot = msg.role === 'assistant';
+                const senderLabel = isBot ? 'Support' : 'You';
+                
+                return (
+                  <div key={msg.id} className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+                    {!isCurrentUser && (
+                      <Avatar className="w-8 h-8 bg-gradient-electric">
+                        <AvatarFallback className="text-white">
+                          <Bot className="w-4 h-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                     
-                    {msg.sender === 'bot' && (
+                    <div className={`max-w-[80%] ${isCurrentUser ? 'order-1' : 'order-2'}`}>
+                      <div className="mb-1">
+                        <span className="text-xs text-muted-foreground font-medium">{senderLabel}</span>
+                      </div>
+                      <Card className={`p-3 ${
+                        isCurrentUser 
+                          ? 'bg-gradient-electric text-white border-0' 
+                          : 'bg-card border-border'
+                      }`}>
+                        {msg.content && <p className="text-sm">{msg.content}</p>}
+                        
+                        {msg.file_url && (
+                          <div className={`${msg.content ? 'mt-2' : ''} flex items-center gap-2 text-xs`}>
+                            <FileText className="w-3 h-3" />
+                            <div className="flex flex-col gap-1">
+                              <a 
+                                href={msg.file_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="underline hover:no-underline"
+                                download
+                              >
+                                Download file
+                              </a>
+                              <span className="opacity-70 text-xs">
+                                Uploaded by {senderLabel}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </Card>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(msg.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+
+                    {isCurrentUser && (
+                      <Avatar className="w-8 h-8 bg-gradient-electric">
+                        <AvatarFallback className="text-white">
+                          <User className="w-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    {isBot && (
                       <div className="flex gap-1 mt-2">
                         <Button
                           variant="ghost"
@@ -158,8 +190,8 @@ export const NewChatInterface = () => {
                       </div>
                     )}
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 
@@ -215,7 +247,7 @@ export const NewChatInterface = () => {
                 <input
                   id="file-upload"
                   type="file"
-                  accept="image/*,audio/*,.pdf,.doc,.docx"
+                  accept=".pdf,.png,.jpg,.jpeg"
                   onChange={handleFileSelect}
                   className="hidden"
                 />

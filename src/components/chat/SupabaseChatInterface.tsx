@@ -12,24 +12,27 @@ interface ChatMessageProps {
   message: {
     id: string;
     content: string;
-    sender: 'user' | 'bot';
+    role: 'user' | 'assistant';
     timestamp: string;
-    fileUrl?: string;
-    escalated?: boolean;
+    file_url?: string;
+    user_id?: string;
+    type?: 'message' | 'fileupload';
   };
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { escalateToSupport } = useChat();
-  const isBot = message.sender === 'bot';
+  const { escalateToSupport, currentSession } = useChat();
+  const isBot = message.role === 'assistant';
+  const isCurrentUser = message.user_id === currentSession?.user_id;
+  const senderLabel = isBot ? 'Support' : 'You';
 
   const handleEscalate = () => {
-    escalateToSupport(message.content, message.fileUrl);
+    escalateToSupport(message.content, message.file_url);
   };
 
   return (
-    <div className={`flex gap-3 ${isBot ? 'justify-start' : 'justify-end'}`}>
-      {isBot && (
+    <div className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
+      {!isCurrentUser && (
         <Avatar className="w-8 h-8 bg-gradient-electric">
           <AvatarFallback className="text-white">
             <Bot className="w-4 h-4" />
@@ -37,25 +40,42 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
         </Avatar>
       )}
       
-      <div className={`max-w-[80%] ${isBot ? 'order-2' : 'order-1'}`}>
+      <div className={`max-w-[80%] ${isCurrentUser ? 'order-1' : 'order-2'}`}>
+        <div className="mb-1">
+          <span className="text-xs text-muted-foreground font-medium">{senderLabel}</span>
+        </div>
         <Card className={`p-3 ${
-          isBot 
-            ? 'bg-card border-border' 
-            : 'bg-gradient-electric text-white border-0'
+          isCurrentUser 
+            ? 'bg-gradient-electric text-white border-0' 
+            : 'bg-card border-border'
         }`}>
-          <p className="text-sm">{message.content}</p>
+          {message.content && <p className="text-sm">{message.content}</p>}
           
-          {message.fileUrl && (
-            <div className="mt-2 flex items-center gap-2 text-xs opacity-80">
+          {message.file_url && (
+            <div className={`${message.content ? 'mt-2' : ''} flex items-center gap-2 text-xs`}>
               <FileText className="w-3 h-3" />
-              <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">
-                View attachment
-              </a>
+              <div className="flex flex-col gap-1">
+                <a 
+                  href={message.file_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="underline hover:no-underline"
+                  download
+                >
+                  Download file
+                </a>
+                <span className="opacity-70 text-xs">
+                  Uploaded by {senderLabel}
+                </span>
+              </div>
             </div>
           )}
         </Card>
+        <p className="text-xs text-muted-foreground mt-1">
+          {new Date(message.timestamp).toLocaleString()}
+        </p>
         
-        {isBot && !message.escalated && (
+        {isBot && (
           <Button
             variant="ghost"
             size="sm"
@@ -66,13 +86,9 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             Submit to Support
           </Button>
         )}
-        
-        {message.escalated && (
-          <p className="text-xs text-muted-foreground mt-1">✓ Submitted to support</p>
-        )}
       </div>
 
-      {!isBot && (
+      {isCurrentUser && (
         <Avatar className="w-8 h-8 bg-gradient-electric">
           <AvatarFallback className="text-white">
             <User className="w-4 h-4" />
@@ -92,7 +108,12 @@ export const SupabaseChatInterface: React.FC = () => {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
-    maxSize: 10 * 1024 * 1024, // 10MB
+    maxSize: 1 * 1024 * 1024, // 1MB
+    accept: {
+      'application/pdf': ['.pdf'],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg']
+    },
     onDrop: (acceptedFiles) => {
       if (acceptedFiles.length > 0) {
         setAttachedFile(acceptedFiles[0]);

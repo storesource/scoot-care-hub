@@ -6,9 +6,11 @@ import { useToast } from '@/hooks/use-toast';
 interface ChatMessage {
   id: string;
   content: string;
-  sender: 'user' | 'bot';
+  role: 'user' | 'assistant';
   timestamp: string;
-  fileUrl?: string;
+  file_url?: string;
+  user_id?: string;
+  type?: 'message' | 'fileupload';
 }
 
 interface ChatSession {
@@ -254,9 +256,11 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         content,
-        sender: 'user',
+        role: 'user',
         timestamp: new Date().toISOString(),
-        fileUrl
+        file_url: fileUrl || undefined,
+        user_id: user.id,
+        type: file && !content.trim() ? 'fileupload' : 'message'
       };
 
       let botResponse: string;
@@ -282,8 +286,9 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: botResponse,
-        sender: 'bot',
-        timestamp: new Date().toISOString()
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        type: 'message'
       };
 
       const updatedMessages = [...currentSession.chat_blob, userMessage, botMessage];
