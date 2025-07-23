@@ -120,8 +120,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = async () => {
+    console.log('Logging out user...');
     await supabase.auth.signOut();
     setPhoneNumber('');
+    setCurrentStep('phone');
+    console.log('User logged out successfully');
   };
 
   return (
