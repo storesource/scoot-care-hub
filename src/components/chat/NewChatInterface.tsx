@@ -31,9 +31,10 @@ export const NewChatInterface = () => {
     }
   };
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
     setMessage(question);
-    sendMessage(question);
+    await sendMessage(question);
+    setMessage(''); // Clear input after sending
   };
 
   const handleEscalate = async (messageContent: string) => {

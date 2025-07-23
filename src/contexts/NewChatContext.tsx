@@ -182,18 +182,29 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const findKnowledgebaseMatch = (userMessage: string): KnowledgebaseEntry | null => {
-    const userWords = userMessage.toLowerCase().split(' ');
+    const userWords = userMessage.toLowerCase().split(' ').filter(word => word.length > 2); // Filter out short words
     let bestMatch = null;
     let bestScore = 0;
 
     for (const entry of knowledgebase) {
-      const questionWords = entry.question.toLowerCase().split(' ');
-      const matches = userWords.filter(word => 
-        questionWords.some(qWord => qWord.includes(word) || word.includes(qWord))
-      );
+      const questionWords = entry.question.toLowerCase().split(' ').filter(word => word.length > 2);
       
-      if (matches.length > bestScore && matches.length > 0) {
-        bestScore = matches.length;
+      // Count exact word matches and partial matches
+      let exactMatches = 0;
+      let partialMatches = 0;
+      
+      for (const userWord of userWords) {
+        if (questionWords.includes(userWord)) {
+          exactMatches += 2; // Give more weight to exact matches
+        } else if (questionWords.some(qWord => qWord.includes(userWord) || userWord.includes(qWord))) {
+          partialMatches += 1;
+        }
+      }
+      
+      const totalScore = exactMatches + partialMatches;
+      
+      if (totalScore > bestScore && totalScore > 0) {
+        bestScore = totalScore;
         bestMatch = entry;
       }
     }
