@@ -305,7 +305,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
             botResponse = match.resolution;
           }
         } else {
-          botResponse = "I understand your question, but I don't have a specific answer for that. Would you like me to escalate this to our support team?";
+          botResponse = "I understand your question, but I don't have a specific answer for that. Please create a support query if you need more help.";
         }
       }
 
