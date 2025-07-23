@@ -41,7 +41,6 @@ const Header = () => {
             </div>
             <div>
               <h1 className="font-bold text-lg text-foreground">ScootCare</h1>
-              <p className="text-xs text-muted-foreground -mt-1">Support Portal</p>
             </div>
           </div>
         </Link>
