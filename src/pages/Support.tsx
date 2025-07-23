@@ -22,7 +22,7 @@ interface SupportTicket {
 const Support = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isCreating, setIsCreating] = useState(false);
-  const [newTicket, setNewTicket] = useState({ summary: "", file: null as File | null });
+  const [newTicket, setNewTicket] = useState({ summary: "", description: "", file: null as File | null });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -78,7 +78,7 @@ const Support = () => {
   };
 
   const createTicket = async () => {
-    if (!newTicket.summary.trim() || !user) return;
+    if (!newTicket.summary.trim() || !newTicket.description.trim() || !user) return;
 
     try {
       let fileUrl = null;
@@ -86,10 +86,28 @@ const Support = () => {
         fileUrl = await uploadFile(newTicket.file);
       }
 
+      // First, create a chat session with the description as the initial message
+      const { data: sessionData, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .insert({
+          user_id: user.id,
+          chat_blob: [{
+            role: 'user',
+            content: newTicket.description,
+            timestamp: new Date().toISOString()
+          }]
+        })
+        .select()
+        .single();
+
+      if (sessionError) throw sessionError;
+
+      // Then create the support ticket with the session_id
       const { error } = await supabase
         .from('support_queries')
         .insert({
           user_id: user.id,
+          session_id: sessionData.id,
           summary: newTicket.summary,
           file_url: fileUrl,
           status: 'open'
@@ -102,7 +120,7 @@ const Support = () => {
         description: "Support ticket created successfully"
       });
 
-      setNewTicket({ summary: "", file: null });
+      setNewTicket({ summary: "", description: "", file: null });
       setIsCreating(false);
       fetchTickets();
     } catch (error) {
@@ -169,10 +187,19 @@ const Support = () => {
             <CardContent className="space-y-4">
               <div>
                 <label className="text-sm font-medium">Issue Summary</label>
-                <Textarea
-                  placeholder="Describe your issue or question..."
+                <Input
+                  placeholder="Brief summary of your issue..."
                   value={newTicket.summary}
                   onChange={(e) => setNewTicket({ ...newTicket, summary: e.target.value })}
+                />
+              </div>
+              
+              <div>
+                <label className="text-sm font-medium">Detailed Description</label>
+                <Textarea
+                  placeholder="Provide detailed information about your issue or question..."
+                  value={newTicket.description}
+                  onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
                   rows={4}
                 />
               </div>
@@ -192,14 +219,14 @@ const Support = () => {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={createTicket} disabled={!newTicket.summary.trim()}>
+                <Button onClick={createTicket} disabled={!newTicket.summary.trim() || !newTicket.description.trim()}>
                   Create Ticket
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => {
                     setIsCreating(false);
-                    setNewTicket({ summary: "", file: null });
+                    setNewTicket({ summary: "", description: "", file: null });
                   }}
                 >
                   Cancel
