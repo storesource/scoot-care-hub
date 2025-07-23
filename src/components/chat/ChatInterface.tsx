@@ -2,31 +2,30 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useChat } from '@/contexts/ChatContext';
+import { useChat } from '@/contexts/NewChatContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatMessage } from './ChatMessage';
 import { FileUpload } from './FileUpload';
-import { FileAttachment } from '@/contexts/ChatContext';
 import { Send, Paperclip, MessageCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export const ChatInterface: React.FC = () => {
   const [message, setMessage] = useState('');
-  const [attachedFiles, setAttachedFiles] = useState<FileAttachment[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
-  const { currentSession, sendMessage, chatHistory } = useChat();
-  const { phoneNumber } = useAuth();
+  const { currentSession, sendMessage } = useChat();
+  const { user } = useAuth();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [currentSession?.messages]);
+  }, [currentSession?.chat_blob]);
 
   const handleSendMessage = () => {
     if (!message.trim() && attachedFiles.length === 0) return;
     
-    sendMessage(message, attachedFiles);
+    sendMessage(message, attachedFiles[0]); // Send first file only
     setMessage('');
     setAttachedFiles([]);
     setShowFileUpload(false);
@@ -40,45 +39,8 @@ export const ChatInterface: React.FC = () => {
     }
   };
 
-  const userChatHistory = chatHistory.filter(session => session.phoneNumber === phoneNumber);
-
   return (
     <div className="flex h-full">
-      {/* Chat History Sidebar */}
-      {userChatHistory.length > 1 && (
-        <div className="w-80 border-r bg-muted/20 p-4">
-          <h3 className="font-semibold mb-4 flex items-center gap-2">
-            <MessageCircle className="w-4 h-4" />
-            Previous Conversations
-          </h3>
-          <ScrollArea className="h-[300px]">
-            <div className="space-y-2">
-              {userChatHistory.map((session) => (
-                <Card key={session.id} className="p-3 cursor-pointer hover:bg-muted/50">
-                  <div className="text-sm">
-                    <p className="font-medium">{session.createdAt.toLocaleDateString()}</p>
-                    <p className="text-muted-foreground truncate">
-                      {session.messages[session.messages.length - 1]?.content.substring(0, 50)}...
-                    </p>
-                    <div className="flex justify-between items-center mt-1">
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        session.status === 'escalated' ? 'bg-orange-100 text-orange-800' :
-                        session.status === 'resolved' ? 'bg-green-100 text-green-800' :
-                        'bg-blue-100 text-blue-800'
-                      }`}>
-                        {session.status}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {session.messages.length} messages
-                      </span>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </ScrollArea>
-        </div>
-      )}
 
       {/* Main Chat Interface */}
       <div className="flex-1 flex flex-col">
@@ -91,11 +53,10 @@ export const ChatInterface: React.FC = () => {
             {/* Messages */}
             <ScrollArea className="flex-1 px-6 pb-4">
               <div className="space-y-4">
-                {currentSession?.messages.map((msg) => (
+                {currentSession?.chat_blob.map((msg) => (
                   <ChatMessage
                     key={msg.id}
                     message={msg}
-                    sessionId={currentSession.id}
                   />
                 ))}
                 <div ref={messagesEndRef} />
@@ -105,7 +66,7 @@ export const ChatInterface: React.FC = () => {
             {/* File Upload Area */}
             {showFileUpload && (
               <div className="px-6 py-4 border-t">
-                <FileUpload onFilesAdded={setAttachedFiles} />
+                <input type="file" onChange={(e) => e.target.files && setAttachedFiles([e.target.files[0]])} />
               </div>
             )}
 

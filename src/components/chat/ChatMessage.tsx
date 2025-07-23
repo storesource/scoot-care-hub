@@ -1,24 +1,23 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useChat } from '@/contexts/ChatContext';
-import { ChatMessage as ChatMessageType } from '@/contexts/ChatContext';
+import { useChat } from '@/contexts/NewChatContext';
+import { ChatMessage as ChatMessageType } from '@/contexts/NewChatContext';
 import { Bot, User, AlertTriangle, FileText, Image, File } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  sessionId: string;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message, sessionId }) => {
-  const { escalateToHuman } = useChat();
+export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+  const { escalateToSupport } = useChat();
   const { toast } = useToast();
 
   const handleEscalate = () => {
-    escalateToHuman(sessionId);
+    escalateToSupport("Need human support", message.file_url);
     toast({
-      title: "Escalated to Human Support",
+      title: "Escalated to Human Support", 
       description: "Your conversation has been forwarded to our support team.",
     });
   };
@@ -38,43 +37,47 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message, sessionId }) 
   };
 
   return (
-    <div className={`flex gap-3 ${message.isBot ? '' : 'flex-row-reverse'}`}>
+    <div className={`flex gap-3 ${message.sender === 'bot' ? '' : 'flex-row-reverse'}`}>
       <Avatar className="w-8 h-8">
-        <AvatarFallback className={message.isBot ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
-          {message.isBot ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
+        <AvatarFallback className={message.sender === 'bot' ? 'bg-primary text-primary-foreground' : 'bg-secondary'}>
+          {message.sender === 'bot' ? <Bot className="w-4 h-4" /> : <User className="w-4 h-4" />}
         </AvatarFallback>
       </Avatar>
       
-      <div className={`flex-1 space-y-2 ${message.isBot ? '' : 'flex flex-col items-end'}`}>
+      <div className={`flex-1 space-y-2 ${message.sender === 'bot' ? '' : 'flex flex-col items-end'}`}>
         <div
           className={`max-w-[80%] p-3 rounded-lg ${
-            message.isBot
+            message.sender === 'bot'
               ? 'bg-muted text-muted-foreground'
               : 'bg-primary text-primary-foreground'
           }`}
         >
           <p className="text-sm">{message.content}</p>
           
-          {message.files && message.files.length > 0 && (
-            <div className="mt-2 space-y-2">
-              {message.files.map((file) => (
-                <div key={file.id} className="flex items-center gap-2 p-2 bg-background/10 rounded">
-                  {getFileIcon(file.type)}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{file.name}</p>
-                    <p className="text-xs opacity-70">{formatFileSize(file.size)}</p>
-                  </div>
+          {message.file_url && (
+            <div className="mt-2">
+              <div className="flex items-center gap-2 p-2 bg-background/10 rounded">
+                <FileText className="w-4 h-4" />
+                <div className="flex-1 min-w-0">
+                  <a 
+                    href={message.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-xs font-medium underline hover:no-underline"
+                  >
+                    View attachment
+                  </a>
                 </div>
-              ))}
+              </div>
             </div>
           )}
         </div>
         
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>{message.timestamp.toLocaleTimeString()}</span>
+          <span>{new Date(message.timestamp).toLocaleTimeString()}</span>
         </div>
         
-        {message.isBot && (
+        {message.sender === 'bot' && (
           <Button
             variant="outline"
             size="sm"

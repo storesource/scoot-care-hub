@@ -12,17 +12,17 @@ interface ChatMessageProps {
   message: {
     id: string;
     content: string;
-    role: 'user' | 'assistant';
+    sender: 'customer' | 'admin' | 'bot';
     timestamp: string;
     file_url?: string;
     user_id?: string;
-    type?: 'message' | 'fileupload';
+    type: 'message' | 'fileupload';
   };
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   const { escalateToSupport, currentSession } = useChat();
-  const isBot = message.role === 'assistant';
+  const isBot = message.sender === 'bot';
   const isCurrentUser = message.user_id === currentSession?.user_id;
   const senderLabel = isBot ? 'Support' : 'You';
 

@@ -14,11 +14,11 @@ import { useToast } from '@/hooks/use-toast';
 interface ChatMessage {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  sender: 'customer' | 'admin' | 'bot';
   timestamp: string;
   file_url?: string;
-  user_id?: string; // Added to track who sent the message
-  [key: string]: any; // Allow additional properties for Supabase Json compatibility
+  user_id?: string;
+  type: 'message' | 'fileupload';
 }
 
 interface SupportChatInterfaceProps {
@@ -31,11 +31,20 @@ interface SupportChatInterfaceProps {
 const ChatMessageComponent: React.FC<{ message: ChatMessage; isReadOnly: boolean; currentUserRole: string; currentUserId: string }> = ({ message, isReadOnly, currentUserRole, currentUserId }) => {
   // Determine if this is the current user's message by checking user_id
   const isCurrentUser = message.user_id === currentUserId;
-  // Determine labels based on current user's role
-  const currentUserLabel = "You";
-  const otherUserLabel = currentUserRole === 'admin' ? "Customer" : "Support";
   
-  const senderLabel = isCurrentUser ? currentUserLabel : otherUserLabel;
+  // Use sender field for proper labeling
+  let senderLabel = "Unknown";
+  switch (message.sender) {
+    case 'customer':
+      senderLabel = currentUserRole === 'admin' ? "Customer" : (isCurrentUser ? "You" : "Customer");
+      break;
+    case 'admin':
+      senderLabel = currentUserRole === 'admin' ? (isCurrentUser ? "You" : "Admin") : "Support";
+      break;
+    case 'bot':
+      senderLabel = "Support Bot";
+      break;
+  }
 
   return (
     <div className={`flex gap-3 ${isCurrentUser ? 'justify-end' : 'justify-start'}`}>
@@ -163,7 +172,7 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
         },
         (payload) => {
           if (payload.new && payload.new.chat_blob && Array.isArray(payload.new.chat_blob)) {
-            setMessages(payload.new.chat_blob as ChatMessage[]);
+            setMessages(payload.new.chat_blob as unknown as ChatMessage[]);
           }
         }
       )
@@ -216,7 +225,12 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
       }
       
       console.log('Chat session data:', data);
-      setMessages((data?.chat_blob as ChatMessage[]) || []);
+      const chatBlob = data?.chat_blob;
+      if (Array.isArray(chatBlob)) {
+        setMessages(chatBlob as unknown as ChatMessage[]);
+      } else {
+        setMessages([]);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -265,10 +279,11 @@ export const SupportChatInterface: React.FC<SupportChatInterfaceProps> = ({
       const newMessage: ChatMessage = {
         id: `msg-${Date.now()}`,
         content: inputMessage,
-        role: 'user',
+        sender: currentUserRole === 'admin' ? 'admin' : 'customer',
         timestamp: new Date().toISOString(),
         file_url: fileUrl || undefined,
-        user_id: user.id
+        user_id: user.id,
+        type: attachedFile && !inputMessage.trim() ? 'fileupload' : 'message'
       };
 
       const updatedMessages = [...messages, newMessage];

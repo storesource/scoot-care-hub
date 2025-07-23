@@ -130,7 +130,7 @@ export const NewChatInterface = () => {
             ) : (
               currentSession.chat_blob.map((msg) => {
                 const isCurrentUser = msg.user_id === currentSession.user_id;
-                const isBot = msg.role === 'assistant';
+                const isBot = msg.sender === 'bot';
                 const senderLabel = isBot ? 'Support' : 'You';
                 
                 return (

@@ -3,14 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
-interface ChatMessage {
+export interface ChatMessage {
   id: string;
   content: string;
-  role: 'user' | 'assistant';
+  sender: 'customer' | 'admin' | 'bot';
   timestamp: string;
   file_url?: string;
   user_id?: string;
-  type?: 'message' | 'fileupload';
+  type: 'message' | 'fileupload';
 }
 
 interface ChatSession {
@@ -146,33 +146,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const startNewSession = async () => {
     if (!user) return;
 
-    try {
-      const { data, error } = await supabase
-        .from('chat_sessions')
-        .insert({
-          user_id: user.id,
-          chat_blob: [],
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      
-      setCurrentSession({
-        id: data.id,
-        user_id: data.user_id,
-        started_at: data.started_at,
-        chat_blob: Array.isArray(data.chat_blob) ? (data.chat_blob as unknown) as ChatMessage[] : []
-      });
-    } catch (error) {
-      console.error('Error creating session:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start new chat session",
-        variant: "destructive"
-      });
-    }
+    setCurrentSession(null);
+    
+    // Don't create empty session in database, just set local state
+    const newSession: ChatSession = {
+      id: 'temp-' + Date.now(),
+      user_id: user.id,
+      started_at: new Date().toISOString(),
+      chat_blob: []
+    };
+    
+    setCurrentSession(newSession);
   };
 
   const uploadFile = async (file: File): Promise<string | null> => {
@@ -218,15 +202,26 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchLatestOrderStatus = async (): Promise<string> => {
+    if (!user?.id) {
+      return "⚠️ **Authentication Required**\n\nPlease log in to view your order status.";
+    }
+
     try {
+      console.log('Fetching orders for user:', user.id);
+      
       const { data: orders, error } = await supabase
         .from('orders')
         .select('*')
-        .eq('user_id', user?.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(1);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database error fetching orders:', error);
+        throw error;
+      }
+
+      console.log('Orders fetched:', orders);
 
       if (orders && orders.length > 0) {
         const order = orders[0];
@@ -260,7 +255,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error fetching orders:', error);
-      return "⚠️ **Unable to Retrieve Order Information**\n\nI'm having trouble accessing your order details right now. Please try again in a few moments, or contact our support team for immediate assistance.";
+      return `⚠️ **Unable to Retrieve Order Information**\n\nError: ${error instanceof Error ? error.message : 'Unknown error'}\n\nPlease try again in a few moments, or contact our support team for immediate assistance.`;
     }
   };
 
@@ -287,7 +282,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
         content,
-        role: 'user',
+        sender: 'customer',
         timestamp: new Date().toISOString(),
         file_url: fileUrl || undefined,
         user_id: user.id,
@@ -317,24 +312,43 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         content: botResponse,
-        role: 'assistant',
+        sender: 'bot',
         timestamp: new Date().toISOString(),
         type: 'message'
       };
 
       const updatedMessages = [...currentSession.chat_blob, userMessage, botMessage];
 
-      // Update session in database
-      const { error } = await supabase
-        .from('chat_sessions')
-        .update({ chat_blob: updatedMessages as any })
-        .eq('id', currentSession.id);
+      // Create or update session in database only if we have messages
+      let sessionId = currentSession.id;
+      if (currentSession.id.startsWith('temp-')) {
+        // Create new session in database
+        const { data, error } = await supabase
+          .from('chat_sessions')
+          .insert({
+            user_id: user.id,
+            chat_blob: updatedMessages as any,
+            expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
+        sessionId = data.id;
+      } else {
+        // Update existing session
+        const { error } = await supabase
+          .from('chat_sessions')
+          .update({ chat_blob: updatedMessages as any })
+          .eq('id', currentSession.id);
+
+        if (error) throw error;
+      }
 
       // Update local state
       setCurrentSession({
         ...currentSession,
+        id: sessionId,
         chat_blob: updatedMessages
       });
 

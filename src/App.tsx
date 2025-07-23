@@ -16,7 +16,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const AuthenticatedApp = () => {
-  const { isAuthenticated, currentStep } = useAuth();
+  const { isAuthenticated, currentStep, user } = useAuth();
 
   if (!isAuthenticated) {
     if (currentStep === 'otp') {
@@ -30,7 +30,9 @@ const AuthenticatedApp = () => {
       <Routes>
         <Route path="/" element={<Index />} />
         <Route path="/orders" element={<Orders />} />
-        <Route path="/support" element={<Support />} />
+        {user?.user_metadata?.role !== 'admin' && (
+          <Route path="/support" element={<Support />} />
+        )}
         <Route path="/chat" element={<Chat />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
