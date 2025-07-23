@@ -9,45 +9,47 @@ import { ArrowLeft, Shield } from 'lucide-react';
 export const OTPVerification = () => {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { phoneNumber, setCurrentStep } = useAuth();
+  const { phoneNumber, sendOTP, verifyOTP } = useAuth();
   const { toast } = useToast();
 
   const handleVerifyOTP = async () => {
-    if (otp.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter a 6-digit verification code",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    if (otp.length !== 6) return;
+    
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      if (otp === '123456') {
-        setCurrentStep('authenticated');
-        toast({
-          title: "Welcome!",
-          description: "Successfully logged in to ScootCare",
-        });
-      } else {
-        toast({
-          title: "Invalid OTP",
-          description: "Please check your code and try again",
-          variant: "destructive"
-        });
-      }
-      setIsLoading(false);
-    }, 1500);
+    const { error } = await verifyOTP(phoneNumber, otp);
+    
+    if (error) {
+      toast({
+        title: "Invalid OTP",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Success!",
+        description: "You have been successfully logged in.",
+      });
+    }
+    
+    setIsLoading(false);
   };
 
-  const handleResendOTP = () => {
-    toast({
-      title: "OTP Sent",
-      description: `New verification code sent to ${phoneNumber}`,
-    });
+  const handleResendOTP = async () => {
+    const { error } = await sendOTP(phoneNumber);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "OTP Resent",
+        description: `New verification code sent to ${phoneNumber}`,
+      });
+    }
   };
 
   return (
@@ -57,7 +59,7 @@ export const OTPVerification = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setCurrentStep('phone')}
+            onClick={() => {/* Go back functionality can be added later */}}
             className="absolute left-4 top-4"
           >
             <ArrowLeft className="w-4 h-4" />

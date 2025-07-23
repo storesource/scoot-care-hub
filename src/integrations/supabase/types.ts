@@ -14,7 +14,132 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_messages: {
+        Row: {
+          created_at: string | null
+          escalated: boolean | null
+          file_url: string | null
+          id: string
+          message: string | null
+          sender: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          escalated?: boolean | null
+          file_url?: string | null
+          id?: string
+          message?: string | null
+          sender?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          escalated?: boolean | null
+          file_url?: string | null
+          id?: string
+          message?: string | null
+          sender?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      faqs: {
+        Row: {
+          answer: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          question: string | null
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          question?: string | null
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          question?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "faqs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          expected_delivery_date: string | null
+          id: string
+          model: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          model?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          expected_delivery_date?: string | null
+          id?: string
+          model?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          created_at: string | null
+          id: string
+          phone: string | null
+          role: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          phone?: string | null
+          role?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          phone?: string | null
+          role?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

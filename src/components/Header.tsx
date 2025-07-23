@@ -1,15 +1,15 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Shield } from "lucide-react";
+import { Menu, Search, User, Shield, Package, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
+  const { logout } = useAuth();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="h-5 w-5" />
-          </Button>
+        <Link to="/" className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-electric rounded-full flex items-center justify-center">
               <span className="text-white font-bold text-sm">S</span>
@@ -19,18 +19,15 @@ const Header = () => {
               <p className="text-xs text-muted-foreground -mt-1">Support Portal</p>
             </div>
           </div>
-        </div>
+        </Link>
         
-        <div className="hidden md:flex items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search help articles..."
-              className="pl-10 pr-4 py-2 bg-muted rounded-md border-0 w-80 focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-          <Link to="/admin">
+        <div className="flex items-center gap-2">
+          <Link to="/orders">
+            <Button variant="ghost" size="icon" title="My Orders">
+              <Package className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Link to="/admin/faqs">
             <Button variant="ghost" size="icon" title="Admin Panel">
               <Shield className="h-5 w-5" />
             </Button>
@@ -38,11 +35,10 @@ const Header = () => {
           <Button variant="ghost" size="icon">
             <User className="h-5 w-5" />
           </Button>
+          <Button variant="ghost" size="icon" onClick={logout}>
+            <LogOut className="h-5 w-5" />
+          </Button>
         </div>
-        
-        <Button variant="ghost" size="icon" className="md:hidden">
-          <Search className="h-5 w-5" />
-        </Button>
       </div>
     </header>
   );

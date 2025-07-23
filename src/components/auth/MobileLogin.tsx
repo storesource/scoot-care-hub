@@ -14,7 +14,7 @@ interface MobileLoginForm {
 
 export const MobileLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const { setPhoneNumber, setCurrentStep } = useAuth();
+  const { sendOTP } = useAuth();
   const { toast } = useToast();
   
   const { register, handleSubmit, formState: { errors } } = useForm<MobileLoginForm>();
@@ -22,16 +22,22 @@ export const MobileLogin = () => {
   const onSubmit = async (data: MobileLoginForm) => {
     setIsLoading(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      setPhoneNumber(data.phoneNumber);
-      setCurrentStep('otp');
+    const { error } = await sendOTP(data.phoneNumber);
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: error,
+        variant: "destructive"
+      });
+    } else {
       toast({
         title: "OTP Sent",
         description: `Verification code sent to ${data.phoneNumber}`,
       });
-      setIsLoading(false);
-    }, 1500);
+    }
+    
+    setIsLoading(false);
   };
 
   return (

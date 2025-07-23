@@ -4,13 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { AdminProvider } from "@/contexts/AdminContext";
-import { OrderProvider } from "@/contexts/OrderContext";
-import { ChatProvider } from "@/contexts/ChatContext";
+import { ChatProvider } from "@/contexts/SupabaseChatContext";
 import { MobileLogin } from "@/components/auth/MobileLogin";
 import { OTPVerification } from "@/components/auth/OTPVerification";
 import Index from "./pages/Index";
-import Admin from "./pages/Admin";
+import Orders from "./pages/Orders";
+import AdminFAQ from "./pages/AdminFAQ";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,7 +28,8 @@ const AuthenticatedApp = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Index />} />
-        <Route path="/admin" element={<Admin />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/admin/faqs" element={<AdminFAQ />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
@@ -40,17 +40,13 @@ const AuthenticatedApp = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <OrderProvider>
-        <AdminProvider>
-          <AuthProvider>
-            <ChatProvider>
-              <Toaster />
-              <Sonner />
-              <AuthenticatedApp />
-            </ChatProvider>
-          </AuthProvider>
-        </AdminProvider>
-      </OrderProvider>
+      <AuthProvider>
+        <ChatProvider>
+          <Toaster />
+          <Sonner />
+          <AuthenticatedApp />
+        </ChatProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
