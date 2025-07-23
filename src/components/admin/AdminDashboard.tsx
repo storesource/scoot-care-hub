@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit2, Trash2, MessageSquare, FileText, AlertCircle } from "lucide-react";
+import { Plus, Trash2, MessageSquare, FileText, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface KnowledgebaseEntry {
@@ -34,8 +34,6 @@ export const AdminDashboard = () => {
   const [supportQueries, setSupportQueries] = useState<SupportQuery[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
   const [newResolution, setNewResolution] = useState("");
-  const [newType] = useState<'qna'>('qna');
-  const [newMetadata, setNewMetadata] = useState("");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -72,23 +70,13 @@ export const AdminDashboard = () => {
   const addKnowledgebaseEntry = async () => {
     if (!newQuestion.trim() || !newResolution.trim()) return;
     
-    let metadata = {};
-    if (newMetadata.trim()) {
-      try {
-        metadata = JSON.parse(newMetadata);
-      } catch (e) {
-        toast({ title: "Error", description: "Invalid JSON metadata", variant: "destructive" });
-        return;
-      }
-    }
-    
     const { error } = await supabase
       .from('knowledgebase')
       .insert([{ 
         question: newQuestion, 
-        type: newType,
+        type: 'qna',
         resolution: newResolution,
-        metadata 
+        metadata: {}
       }]);
     
     if (error) {
@@ -96,8 +84,6 @@ export const AdminDashboard = () => {
     } else {
       setNewQuestion("");
       setNewResolution("");
-      // Type is always 'qna' now
-      setNewMetadata("");
       fetchKnowledgebase();
       toast({ title: "Success", description: "Knowledge entry added" });
     }
@@ -132,7 +118,7 @@ export const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4" style={{ accentColor: 'hsl(217, 91%, 60%)' }}>
+    <div className="min-h-screen bg-background p-4">
       <div className="max-w-6xl mx-auto space-y-6">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-3 mb-2">
@@ -163,36 +149,26 @@ export const AdminDashboard = () => {
               <h2 className="text-xl font-semibold mb-4 text-blue-600">Manage Chat Knowledge Base</h2>
               
               <div className="space-y-3 mb-6">
-                <Input
-                  placeholder="Question pattern..."
-                  value={newQuestion}
-                  onChange={(e) => setNewQuestion(e.target.value)}
-                />
-                
-                <Select value={newType} disabled>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Q&A Response" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="qna">Q&A Response</SelectItem>
-                  </SelectContent>
-                </Select>
-                
-                <Textarea
-                  placeholder="Answer to return..."
-                  value={newResolution}
-                  onChange={(e) => setNewResolution(e.target.value)}
-                  rows={3}
-                />
-                
-                {false && (
-                  <Textarea
-                    placeholder='Metadata (JSON): {"function": "order_tracking"}'
-                    value={newMetadata}
-                    onChange={(e) => setNewMetadata(e.target.value)}
-                    rows={2}
+                <div>
+                  <Label htmlFor="question">Question</Label>
+                  <Input
+                    id="question"
+                    value={newQuestion}
+                    onChange={(e) => setNewQuestion(e.target.value)}
+                    placeholder="Enter question"
                   />
-                )}
+                </div>
+                
+                <div>
+                  <Label htmlFor="resolution">Answer</Label>
+                  <Textarea
+                    id="resolution"
+                    value={newResolution}
+                    onChange={(e) => setNewResolution(e.target.value)}
+                    placeholder="Enter answer"
+                    rows={3}
+                  />
+                </div>
                 
                 <Button onClick={addKnowledgebaseEntry} className="bg-blue-600 hover:bg-blue-700">
                   <Plus className="h-4 w-4 mr-2" />
@@ -207,16 +183,9 @@ export const AdminDashboard = () => {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <p className="font-medium text-sm">{entry.question}</p>
-                          <Badge variant={entry.type === 'qna' ? 'default' : 'secondary'}>
-                            {entry.type}
-                          </Badge>
+                          <Badge variant="default">Q&A</Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">{entry.resolution}</p>
-                        {entry.metadata && Object.keys(entry.metadata).length > 0 && (
-                          <p className="text-xs text-muted-foreground mt-1 font-mono">
-                            {JSON.stringify(entry.metadata)}
-                          </p>
-                        )}
                       </div>
                       <Button
                         variant="ghost"

@@ -15,7 +15,7 @@ interface ChatSession {
   id: string;
   user_id: string;
   started_at: string;
-  messages: ChatMessage[];
+  chat_blob: ChatMessage[];
 }
 
 interface KnowledgebaseEntry {
@@ -100,7 +100,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
           id: session.id,
           user_id: session.user_id,
           started_at: session.started_at,
-          messages: Array.isArray(session.chat_blob) ? (session.chat_blob as unknown) as ChatMessage[] : []
+          chat_blob: Array.isArray(session.chat_blob) ? (session.chat_blob as unknown) as ChatMessage[] : []
         });
       } else {
         // Create a new session
@@ -130,7 +130,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         id: data.id,
         user_id: data.user_id,
         started_at: data.started_at,
-        messages: Array.isArray(data.chat_blob) ? (data.chat_blob as unknown) as ChatMessage[] : []
+        chat_blob: Array.isArray(data.chat_blob) ? (data.chat_blob as unknown) as ChatMessage[] : []
       });
     } catch (error) {
       console.error('Error creating session:', error);
@@ -251,7 +251,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         timestamp: new Date().toISOString()
       };
 
-      const updatedMessages = [...currentSession.messages, userMessage, botMessage];
+      const updatedMessages = [...currentSession.chat_blob, userMessage, botMessage];
 
       // Update session in database
       const { error } = await supabase
@@ -264,7 +264,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Update local state
       setCurrentSession({
         ...currentSession,
-        messages: updatedMessages
+        chat_blob: updatedMessages
       });
 
     } catch (error) {

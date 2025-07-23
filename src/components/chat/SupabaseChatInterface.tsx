@@ -88,7 +88,7 @@ export const SupabaseChatInterface: React.FC = () => {
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { currentSession, sendMessage, isLoading } = useChat();
-  const messages = currentSession?.messages || [];
+  const messages = currentSession?.chat_blob || [];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,
