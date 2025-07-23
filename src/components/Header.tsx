@@ -1,10 +1,35 @@
 import { Button } from "@/components/ui/button";
-import { Menu, Search, User, Shield, Package, LogOut } from "lucide-react";
+import { Menu, Search, User, Shield, Package, LogOut, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
+  const [userRole, setUserRole] = useState<string>('customer');
+
+  useEffect(() => {
+    if (user) {
+      checkUserRole();
+    }
+  }, [user]);
+
+  const checkUserRole = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user?.id)
+        .single();
+      
+      if (!error && data) {
+        setUserRole(data.role || 'customer');
+      }
+    } catch (error) {
+      console.error('Error checking user role:', error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -22,20 +47,29 @@ const Header = () => {
         </Link>
         
         <div className="flex items-center gap-2">
+          {/* Customer Navigation */}
           <Link to="/orders">
             <Button variant="ghost" size="icon" title="My Orders">
               <Package className="h-5 w-5" />
             </Button>
           </Link>
-          <Link to="/admin/faqs">
-            <Button variant="ghost" size="icon" title="Admin Panel">
-              <Shield className="h-5 w-5" />
-            </Button>
-          </Link>
-          <Button variant="ghost" size="icon">
+          
+          {/* Admin-only Navigation */}
+          {userRole === 'admin' && (
+            <Link to="/admin/faqs">
+              <Button variant="ghost" size="icon" title="Admin Panel" className="text-primary">
+                <Shield className="h-5 w-5" />
+              </Button>
+            </Link>
+          )}
+          
+          {/* User Profile */}
+          <Button variant="ghost" size="icon" title="Profile">
             <User className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={logout}>
+          
+          {/* Logout */}
+          <Button variant="ghost" size="icon" onClick={logout} title="Logout">
             <LogOut className="h-5 w-5" />
           </Button>
         </div>

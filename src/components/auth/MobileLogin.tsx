@@ -61,7 +61,7 @@ export const MobileLogin = () => {
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="+1 (555) 123-4567"
+                placeholder="8806471526"
                 {...register('phoneNumber', {
                   required: 'Mobile number is required',
                   pattern: {
