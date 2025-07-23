@@ -64,12 +64,17 @@ const AdminFAQ = () => {
   const loadFAQs = async () => {
     try {
       const { data, error } = await supabase
-        .from('faqs')
+        .from('knowledgebase')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setFaqs(data || []);
+      setFaqs((data || []).map(item => ({
+        id: item.id,
+        question: item.question,
+        answer: item.resolution,
+        created_at: item.created_at
+      })));
     } catch (error) {
       console.error('Error loading FAQs:', error);
       toast({
@@ -94,11 +99,11 @@ const AdminFAQ = () => {
 
     try {
       const { error } = await supabase
-        .from('faqs')
+        .from('knowledgebase')
         .insert({
           question: newFAQ.question,
-          answer: newFAQ.answer,
-          created_by: user?.id
+          resolution: newFAQ.answer,
+          type: 'qna'
         });
 
       if (error) throw error;
@@ -133,10 +138,10 @@ const AdminFAQ = () => {
 
     try {
       const { error } = await supabase
-        .from('faqs')
+        .from('knowledgebase')
         .update({
           question: editData.question,
-          answer: editData.answer
+          resolution: editData.answer
         })
         .eq('id', id);
 
@@ -164,7 +169,7 @@ const AdminFAQ = () => {
 
     try {
       const { error } = await supabase
-        .from('faqs')
+        .from('knowledgebase')
         .delete()
         .eq('id', id);
 

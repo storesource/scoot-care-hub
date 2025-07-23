@@ -91,7 +91,7 @@ export const NewChatInterface = () => {
 
           {/* Chat Messages */}
           <div className="h-96 overflow-y-auto border border-gray-200 rounded-lg bg-gray-50/50 p-4 space-y-3">
-            {!currentSession || currentSession.chat_blob.length === 0 ? (
+            {!currentSession || currentSession.messages.length === 0 ? (
               <div className="flex items-center justify-center h-full text-center">
                 <div className="space-y-3">
                   <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto">
@@ -104,7 +104,7 @@ export const NewChatInterface = () => {
                 </div>
               </div>
             ) : (
-              currentSession.chat_blob.map((msg) => (
+              currentSession.messages.map((msg) => (
                 <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg shadow-sm ${
                     msg.sender === 'user' 

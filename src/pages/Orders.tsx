@@ -34,7 +34,13 @@ const Orders = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setOrders(data || []);
+      setOrders((data || []).map(order => ({
+        id: order.id,
+        model: order.model_name,
+        status: order.order_status,
+        expected_delivery_date: order.expected_delivery_date,
+        created_at: order.created_at
+      })));
     } catch (error) {
       console.error('Error loading orders:', error);
     } finally {

@@ -15,7 +15,7 @@ interface ChatSession {
   id: string;
   user_id: string;
   started_at: string;
-  chat_blob: ChatMessage[];
+  messages: ChatMessage[];
 }
 
 interface KnowledgebaseEntry {
@@ -95,7 +95,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (sessionError) throw sessionError;
 
       if (sessions && sessions.length > 0) {
-        setCurrentSession(sessions[0]);
+        const session = sessions[0];
+        setCurrentSession({
+          id: session.id,
+          user_id: session.user_id,
+          started_at: session.started_at,
+          messages: Array.isArray(session.chat_blob) ? (session.chat_blob as unknown) as ChatMessage[] : []
+        });
       } else {
         // Create a new session
         await startNewSession();
@@ -119,7 +125,13 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .single();
 
       if (error) throw error;
-      setCurrentSession(data);
+      
+      setCurrentSession({
+        id: data.id,
+        user_id: data.user_id,
+        started_at: data.started_at,
+        messages: Array.isArray(data.chat_blob) ? (data.chat_blob as unknown) as ChatMessage[] : []
+      });
     } catch (error) {
       console.error('Error creating session:', error);
       toast({
@@ -239,12 +251,12 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         timestamp: new Date().toISOString()
       };
 
-      const updatedChatBlob = [...currentSession.chat_blob, userMessage, botMessage];
+      const updatedMessages = [...currentSession.messages, userMessage, botMessage];
 
       // Update session in database
       const { error } = await supabase
         .from('chat_sessions')
-        .update({ chat_blob: updatedChatBlob })
+        .update({ chat_blob: updatedMessages as any })
         .eq('id', currentSession.id);
 
       if (error) throw error;
@@ -252,7 +264,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Update local state
       setCurrentSession({
         ...currentSession,
-        chat_blob: updatedChatBlob
+        messages: updatedMessages
       });
 
     } catch (error) {

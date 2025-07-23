@@ -5,26 +5,26 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Paperclip, Send, Bot, User, FileText, AlertTriangle } from 'lucide-react';
-import { useSupabaseChat } from '@/contexts/SupabaseChatContext';
+import { useChat } from '@/contexts/NewChatContext';
 import { useDropzone } from 'react-dropzone';
 
 interface ChatMessageProps {
   message: {
     id: string;
-    message: string;
+    content: string;
     sender: 'user' | 'bot';
-    created_at: string;
-    file_url?: string;
+    timestamp: string;
+    fileUrl?: string;
     escalated?: boolean;
   };
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const { escalateMessage } = useSupabaseChat();
+  const { escalateToSupport } = useChat();
   const isBot = message.sender === 'bot';
 
   const handleEscalate = () => {
-    escalateMessage(message.id);
+    escalateToSupport(message.content, message.fileUrl);
   };
 
   return (
@@ -43,12 +43,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
             ? 'bg-card border-border' 
             : 'bg-gradient-electric text-white border-0'
         }`}>
-          <p className="text-sm">{message.message}</p>
+          <p className="text-sm">{message.content}</p>
           
-          {message.file_url && (
+          {message.fileUrl && (
             <div className="mt-2 flex items-center gap-2 text-xs opacity-80">
               <FileText className="w-3 h-3" />
-              <a href={message.file_url} target="_blank" rel="noopener noreferrer" className="underline">
+              <a href={message.fileUrl} target="_blank" rel="noopener noreferrer" className="underline">
                 View attachment
               </a>
             </div>
@@ -87,7 +87,8 @@ export const SupabaseChatInterface: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [attachedFile, setAttachedFile] = useState<File | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { messages, sendMessage, isLoading } = useSupabaseChat();
+  const { currentSession, sendMessage, isLoading } = useChat();
+  const messages = currentSession?.messages || [];
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     maxFiles: 1,

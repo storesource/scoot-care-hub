@@ -96,7 +96,7 @@ export const AdminDashboard = () => {
     } else {
       setNewQuestion("");
       setNewResolution("");
-      setNewType('qna');
+      // Type is always 'qna' now
       setNewMetadata("");
       fetchKnowledgebase();
       toast({ title: "Success", description: "Knowledge entry added" });
@@ -169,24 +169,23 @@ export const AdminDashboard = () => {
                   onChange={(e) => setNewQuestion(e.target.value)}
                 />
                 
-                <Select value={newType} onValueChange={(value: 'qna' | 'function') => setNewType(value)}>
+                <Select value={newType} disabled>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+                    <SelectValue placeholder="Q&A Response" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="qna">Q&A Response</SelectItem>
-                    <SelectItem value="function">Function Call</SelectItem>
                   </SelectContent>
                 </Select>
                 
                 <Textarea
-                  placeholder={newType === 'qna' ? "Answer to return..." : "Resolution or function description..."}
+                  placeholder="Answer to return..."
                   value={newResolution}
                   onChange={(e) => setNewResolution(e.target.value)}
                   rows={3}
                 />
                 
-                {newType === 'function' && (
+                {false && (
                   <Textarea
                     placeholder='Metadata (JSON): {"function": "order_tracking"}'
                     value={newMetadata}
