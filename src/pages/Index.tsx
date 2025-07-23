@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import QuickActions from "@/components/QuickActions";
+import { OrdersSection } from "@/components/OrdersSection";
 import FAQSection from "@/components/FAQSection";
 import StatusBar from "@/components/StatusBar";
 import { ChatInterface } from "@/components/chat/ChatInterface";
@@ -25,6 +26,9 @@ const Index = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <ChatInterface />
+        </div>
+        <div className="mb-8">
+          <OrdersSection />
         </div>
       </div>
       <QuickActions />

@@ -48,6 +48,14 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       keywords: ['brake', 'brakes', 'stopping', 'safety'],
       createdAt: new Date(),
       updatedAt: new Date()
+    },
+    {
+      id: '4',
+      question: 'Order status and delivery',
+      answer: "I can help you check your order status! Please provide your order number (e.g., SCT-2024-001) and I'll give you the latest update on your delivery.",
+      keywords: ['order', 'delivery', 'status', 'tracking', 'shipped', 'when will', 'arrive'],
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ]);
 
@@ -88,6 +96,18 @@ export const AdminProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const getBotResponse = (userMessage: string): string => {
     const message = userMessage.toLowerCase();
+    
+    // Check for order number pattern (SCT-YYYY-NNN)
+    const orderNumberMatch = message.match(/sct[-\s]?(\d{4})[-\s]?(\d{3})/i);
+    if (orderNumberMatch || message.includes('order') && (message.includes('status') || message.includes('track') || message.includes('delivery'))) {
+      if (orderNumberMatch) {
+        const orderNumber = `SCT-${orderNumberMatch[1]}-${orderNumberMatch[2]}`;
+        // This will be handled by ChatContext which has access to OrderContext
+        return `ORDER_LOOKUP:${orderNumber}`;
+      } else {
+        return "I can help you check your order status! Please provide your order number (it looks like SCT-2024-001) and I'll give you the latest update.";
+      }
+    }
     
     // Find matching Q&A pair based on keywords
     const matchingQA = qaPairs.find(qa => 

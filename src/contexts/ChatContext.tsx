@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 import { useAdmin } from './AdminContext';
+import { useOrders } from './OrderContext';
 
 export interface ChatMessage {
   id: string;
@@ -38,7 +40,9 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { phoneNumber } = useAuth();
   const { getBotResponse } = useAdmin();
+  const { getOrderStatus } = useOrders();
   const [currentSession, setCurrentSession] = useState<ChatSession | null>(null);
   const [chatHistory, setChatHistory] = useState<ChatSession[]>([]);
 
@@ -106,10 +110,17 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       files
     };
 
+    // Get bot response and handle order lookups
+    let botResponseContent = getBotResponse(content);
+    if (botResponseContent.startsWith('ORDER_LOOKUP:')) {
+      const orderNumber = botResponseContent.replace('ORDER_LOOKUP:', '');
+      botResponseContent = getOrderStatus(orderNumber);
+    }
+
     // Simulate bot response
     const botMessage: ChatMessage = {
       id: (Date.now() + 1).toString(),
-      content: getBotResponse(content),
+      content: botResponseContent,
       timestamp: new Date(Date.now() + 1000),
       isBot: true
     };

@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AdminProvider } from "@/contexts/AdminContext";
+import { OrderProvider } from "@/contexts/OrderContext";
 import { ChatProvider } from "@/contexts/ChatContext";
 import { MobileLogin } from "@/components/auth/MobileLogin";
 import { OTPVerification } from "@/components/auth/OTPVerification";
@@ -39,15 +40,17 @@ const AuthenticatedApp = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AdminProvider>
-        <AuthProvider>
-          <ChatProvider>
-            <Toaster />
-            <Sonner />
-            <AuthenticatedApp />
-          </ChatProvider>
-        </AuthProvider>
-      </AdminProvider>
+      <OrderProvider>
+        <AdminProvider>
+          <AuthProvider>
+            <ChatProvider>
+              <Toaster />
+              <Sonner />
+              <AuthenticatedApp />
+            </ChatProvider>
+          </AuthProvider>
+        </AdminProvider>
+      </OrderProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
