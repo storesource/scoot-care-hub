@@ -30,6 +30,24 @@ const Support = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Prevent admin from creating support tickets
+  if (user?.user_metadata?.role === 'admin') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold mb-4">Access Denied</h2>
+            <p className="text-muted-foreground mb-4">Admins cannot create support tickets.</p>
+            <Link to="/admin">
+              <Button>Go to Admin Panel</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   useEffect(() => {
     fetchTickets();
   }, []);

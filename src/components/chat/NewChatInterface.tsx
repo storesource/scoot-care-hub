@@ -5,12 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Send, Upload, MessageCircle, AlertTriangle, Bot, User, FileText } from 'lucide-react';
+import { Send, Upload, MessageCircle, AlertTriangle, Bot, User, FileText, Plus } from 'lucide-react';
 import { useChat } from '@/contexts/NewChatContext';
 import { useToast } from '@/hooks/use-toast';
 
 export const NewChatInterface = () => {
-  const { currentSession, knowledgebase, sendMessage, escalateToSupport, isLoading } = useChat();
+  const { currentSession, knowledgebase, sendMessage, escalateToSupport, isLoading, startNewSession, loadLastSession } = useChat();
   const [message, setMessage] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const { toast } = useToast();
@@ -74,10 +74,21 @@ export const NewChatInterface = () => {
     <div className="max-w-4xl mx-auto space-y-6">
       <Card className="shadow-xl border-0 bg-white/90 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle className="text-xl font-semibold text-blue-600 flex items-center gap-2">
-            <MessageCircle className="h-6 w-6" />
-            ScootCare Support Chat
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-xl font-semibold text-blue-600 flex items-center gap-2">
+              <MessageCircle className="h-6 w-6" />
+              ScootCare Support Chat
+            </CardTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={startNewSession}
+              className="text-blue-600 border-blue-200 hover:bg-blue-50"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              New Chat
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Starter Questions */}

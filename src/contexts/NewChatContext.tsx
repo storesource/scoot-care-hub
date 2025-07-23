@@ -45,6 +45,7 @@ interface ChatContextType {
   startNewSession: () => Promise<void>;
   escalateToSupport: (summary: string, fileUrl?: string) => Promise<void>;
   isLoading: boolean;
+  loadLastSession: () => Promise<void>;
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
@@ -113,6 +114,35 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const loadLastSession = async () => {
+    if (!user) return;
+
+    try {
+      // Load the most recent non-expired session
+      const { data: sessions, error: sessionError } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .gt('expires_at', new Date().toISOString())
+        .order('started_at', { ascending: false })
+        .limit(1);
+
+      if (sessionError) throw sessionError;
+
+      if (sessions && sessions.length > 0) {
+        const session = sessions[0];
+        setCurrentSession({
+          id: session.id,
+          user_id: session.user_id,
+          started_at: session.started_at,
+          chat_blob: Array.isArray(session.chat_blob) ? (session.chat_blob as unknown) as ChatMessage[] : []
+        });
+      }
+    } catch (error) {
+      console.error('Error loading last session:', error);
+    }
+  };
+
   const startNewSession = async () => {
     if (!user) return;
 
@@ -121,7 +151,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .from('chat_sessions')
         .insert({
           user_id: user.id,
-          chat_blob: []
+          chat_blob: [],
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days from now
         })
         .select()
         .single();
@@ -373,7 +404,8 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sendMessage,
       startNewSession,
       escalateToSupport,
-      isLoading
+      isLoading,
+      loadLastSession
     }}>
       {children}
     </ChatContext.Provider>
