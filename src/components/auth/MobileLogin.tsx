@@ -50,23 +50,23 @@ export const MobileLogin = () => {
           <div>
             <CardTitle className="text-2xl text-foreground">Welcome to ScootCare</CardTitle>
             <CardDescription className="text-muted-foreground">
-              Enter your mobile number with country code (e.g., +918806471526)
+              Enter your mobile number with country code (e.g., 918806471526)
             </CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="phoneNumber">Mobile Number (+CountryCodeNumber)</Label>
+              <Label htmlFor="phoneNumber">Mobile Number (CountryCodeNumber)</Label>
               <Input
                 id="phoneNumber"
                 type="tel"
-                placeholder="+918806471526"
+                placeholder="918806471526"
                 {...register('phoneNumber', {
                   required: 'Mobile number is required',
                   pattern: {
-                    value: /^\+[1-9]\d{1,14}$/,
-                    message: 'Please enter a valid mobile number with country code (e.g., +918806471526)'
+                    value: /^[1-9]\d{1,14}$/,
+                    message: 'Please enter a valid mobile number with country code (e.g., 918806471526)'
                   }
                 })}
                 className="text-base"
