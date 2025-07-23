@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_knowledgebase: {
+        Row: {
+          answer: string
+          created_at: string
+          id: string
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          id?: string
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          id?: string
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string | null
@@ -118,6 +142,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      starter_questions: {
+        Row: {
+          created_at: string
+          id: string
+          order_hint: number | null
+          question: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_hint?: number | null
+          question: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_hint?: number | null
+          question?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       users: {
         Row: {
