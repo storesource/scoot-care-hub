@@ -10,9 +10,11 @@ import { Plus, ArrowLeft, AlertCircle, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import Header from "@/components/Header";
+import { SupportChatInterface } from "@/components/chat/SupportChatInterface";
 
 interface SupportTicket {
   id: string;
+  session_id: string | null;
   summary: string;
   file_url?: string;
   status: string;
@@ -22,6 +24,7 @@ interface SupportTicket {
 const Support = () => {
   const [tickets, setTickets] = useState<SupportTicket[]>([]);
   const [isCreating, setIsCreating] = useState(false);
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
   const [newTicket, setNewTicket] = useState({ summary: "", description: "", file: null as File | null });
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
@@ -92,10 +95,11 @@ const Support = () => {
         .insert({
           user_id: user.id,
           chat_blob: [{
+            id: `msg-${Date.now()}`,
             role: 'user',
             content: newTicket.description,
             timestamp: new Date().toISOString()
-          }]
+          }] as any
         })
         .select()
         .single();
@@ -150,6 +154,38 @@ const Support = () => {
               <div key={i} className="h-32 bg-muted rounded-lg"></div>
             ))}
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If a ticket is selected, show the chat interface
+  if (selectedTicket) {
+    if (!selectedTicket.session_id) {
+      return (
+        <div className="min-h-screen bg-background">
+          <Header />
+          <div className="container mx-auto px-4 py-8">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold mb-4">Error</h2>
+              <p className="text-muted-foreground mb-4">This support ticket doesn't have an associated chat session.</p>
+              <Button onClick={() => setSelectedTicket(null)}>Go Back</Button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8 h-[calc(100vh-80px)]">
+          <SupportChatInterface
+            sessionId={selectedTicket.session_id}
+            ticketStatus={selectedTicket.status}
+            ticketSummary={selectedTicket.summary}
+            onBack={() => setSelectedTicket(null)}
+          />
         </div>
       </div>
     );
@@ -239,7 +275,11 @@ const Support = () => {
         {/* Tickets List */}
         <div className="space-y-4">
           {tickets.map((ticket) => (
-            <Card key={ticket.id}>
+            <Card 
+              key={ticket.id} 
+              className="cursor-pointer hover:shadow-md transition-shadow"
+              onClick={() => setSelectedTicket(ticket)}
+            >
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -250,6 +290,16 @@ const Support = () => {
                     <span className="text-xs text-muted-foreground">
                       {new Date(ticket.created_at).toLocaleDateString()}
                     </span>
+                    {ticket.status === 'open' && (
+                      <Badge variant="outline" className="text-xs">
+                        Click to chat
+                      </Badge>
+                    )}
+                    {ticket.status === 'resolved' && (
+                      <Badge variant="outline" className="text-xs">
+                        Read-only
+                      </Badge>
+                    )}
                   </div>
                 </div>
                 
@@ -258,14 +308,7 @@ const Support = () => {
                 {ticket.file_url && (
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <FileText className="w-3 h-3" />
-                    <a 
-                      href={ticket.file_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="underline hover:text-foreground"
-                    >
-                      View attachment
-                    </a>
+                    <span>Has attachment</span>
                   </div>
                 )}
               </CardContent>
